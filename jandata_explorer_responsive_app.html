@@ -1,0 +1,2425 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50 transition-colors duration-200">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>जनडाटा | JanData - Government Data & Public Infrastructure Explorer</title>
+<!-- Tailwind CSS via CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Font Awesome Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Leaflet.js CSS & JS for Interactive Map -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- html2pdf.js for Client-Side PDF Generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<!-- Google Fonts: Inter, Yatra One, Rozha One & JetBrains Mono -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Rozha+One&family=Yatra+One&display=swap" rel="stylesheet">
+
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['Inter', 'sans-serif'],
+          mono: ['JetBrains Mono', 'monospace'],
+          hindi: ['Yatra One', 'Rozha One', 'sans-serif'],
+        },
+        colors: {
+          gov: {
+            50: '#f0f5ff',
+            100: '#e5edff',
+            500: '#2563eb',
+            600: '#1d4ed8',
+            700: '#1e40af',
+            800: '#1e3a8a',
+            900: '#0f172a',
+            950: '#090d16',
+          }
+        }
+      }
+    }
+  }
+</script>
+<style>
+  /* Custom scrollbar for data tables & drawers */
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #f1f5f9;
+  }
+  .dark ::-webkit-scrollbar-track {
+    background: #0f172a;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+  }
+  .dark ::-webkit-scrollbar-thumb {
+    background: #334155;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+  .glass-card {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(16px);
+  }
+  .dark .glass-card {
+    background: rgba(15, 23, 42, 0.92);
+  }
+  /* Leaflet Map Styling Override */
+  .leaflet-popup-content-wrapper {
+    background-color: #0f172a !important;
+    color: #f8fafc !important;
+    border-radius: 0.75rem !important;
+    padding: 2px !important;
+    border: 1px solid #334155;
+  }
+  .leaflet-popup-tip {
+    background-color: #0f172a !important;
+  }
+
+  /* Tricolor text outline effect */
+  .tricolor-logo-text {
+    background: linear-gradient(180deg, #ff9933 0%, #ffffff 48%, #138808 95%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -webkit-text-stroke: 1px #0f172a;
+    font-weight: 900;
+  }
+
+  @keyframes pulseSubtle {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.03); opacity: 0.9; }
+  }
+  .pulse-logo {
+    animation: pulseSubtle 3s ease-in-out infinite;
+  }
+  
+  /* Touch target safety for mobile devices */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+</style>
+</head>
+<body class="h-full flex flex-col font-sans text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 antialiased selection:bg-blue-500 selection:text-white transition-colors duration-200 overflow-x-hidden">
+
+<!-- ========================================== -->
+<!-- DEMO LOGIN MODAL (OPENS IMMEDIATELY ON LOAD) -->
+<!-- ========================================== -->
+<div id="loginModalOverlay" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-3 sm:p-4 transition-all duration-300 overflow-y-auto">
+  <div class="relative w-full max-w-md my-auto bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200/80 dark:border-slate-800 overflow-hidden transform transition-all">
+    <!-- Top Decorative Tricolor Stripe -->
+    <div class="h-2 w-full bg-gradient-to-r from-amber-500 via-slate-200 to-emerald-600"></div>
+
+    <div class="p-5 sm:p-8 space-y-5 sm:space-y-6">
+      
+      <!-- Logo Component (Matching JanData Official Emblem) -->
+      <div class="flex items-center justify-center gap-3 pb-1">
+        <!-- SVG Vector Chakra Emblem with 'ज' -->
+        <div class="relative w-14 h-14 sm:w-18 sm:h-18 flex-shrink-0 pulse-logo">
+          <svg viewBox="0 0 160 160" class="w-full h-full drop-shadow-md">
+            <circle cx="80" cy="80" r="74" fill="none" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="3,3" />
+            <polygon points="80,10 102,22 122,12 136,30 152,38 152,60 160,80 152,100 152,122 136,130 122,148 102,138 80,150 58,138 38,148 24,130 8,122 8,100 0,80 8,60 8,38 24,30 38,12 58,22" fill="#fff9ed" stroke="#1e293b" stroke-width="2" class="dark:fill-slate-800" />
+            <g stroke="#eab308" stroke-width="1.2" opacity="0.85">
+              <line x1="80" y1="20" x2="135" y2="45" />
+              <line x1="135" y1="45" x2="140" y2="105" />
+              <line x1="140" y1="105" x2="80" y2="140" />
+              <line x1="80" y1="140" x2="20" y2="105" />
+              <line x1="20" y1="105" x2="25" y2="45" />
+              <line x1="25" y1="45" x2="80" y2="20" />
+              <line x1="80" y1="20" x2="80" y2="140" stroke="#16a34a" />
+              <line x1="25" y1="45" x2="140" y2="105" stroke="#16a34a" />
+              <line x1="135" y1="45" x2="20" y2="105" stroke="#16a34a" />
+            </g>
+            <g fill="#1e293b">
+              <circle cx="80" cy="18" r="5.5" />
+              <circle cx="118" cy="28" r="5.5" />
+              <circle cx="142" cy="56" r="5.5" />
+              <circle cx="144" cy="98" r="5.5" />
+              <circle cx="124" cy="132" r="5.5" />
+              <circle cx="80" cy="142" r="5.5" />
+              <circle cx="36" cy="132" r="5.5" />
+              <circle cx="16" cy="98" r="5.5" />
+              <circle cx="18" cy="56" r="5.5" />
+              <circle cx="42" cy="28" r="5.5" />
+            </g>
+            <circle cx="80" cy="80" r="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" />
+            <path d="M 44,70 A 38,38 0 0,1 116,70" fill="none" stroke="#f97316" stroke-width="4.5" stroke-linecap="round" />
+            <path d="M 44,90 A 38,38 0 0,0 116,90" fill="none" stroke="#16a34a" stroke-width="4.5" stroke-linecap="round" />
+            <text x="80" y="93" font-family="'Rozha One', 'Yatra One', serif" font-weight="900" font-size="40" fill="#0f172a" text-anchor="middle">ज</text>
+          </svg>
+        </div>
+
+        <!-- Typography Heading -->
+        <div class="border-l-2 border-slate-300 dark:border-slate-700 pl-2.5">
+          <div class="flex items-center text-lg sm:text-2xl font-black tracking-tight leading-none">
+            <span class="tricolor-logo-text pr-1 text-xl sm:text-2xl font-black">जनडाटा</span>
+            <span class="text-slate-400 font-light mx-0.5">|</span>
+            <span class="tricolor-logo-text tracking-wider pl-0.5 font-mono text-lg sm:text-2xl">JANDATA</span>
+          </div>
+          <div class="text-[8px] sm:text-[10px] font-bold text-slate-800 dark:text-slate-300 tracking-wider mt-1 whitespace-nowrap">
+            एक भारत • अनेक पहचान • एक जनडाटा
+          </div>
+        </div>
+      </div>
+
+      <!-- Welcome Subtext -->
+      <div class="text-center space-y-0.5">
+        <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">Portal Access Verification</h3>
+        <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
+          Enter mobile number to receive demo OTP for public audit desk
+        </p>
+      </div>
+
+      <!-- STEP 1: MOBILE NUMBER INPUT -->
+      <div id="loginStep1" class="space-y-3.5">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">
+            Mobile Number / मोबाइल नंबर
+          </label>
+          <div class="relative flex rounded-xl border border-slate-300 dark:border-slate-700 overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 bg-slate-50 dark:bg-slate-800">
+            <span class="inline-flex items-center px-3 text-xs font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border-r border-slate-300 dark:border-slate-700">
+              <span class="mr-1">🇮🇳</span> +91
+            </span>
+            <input type="tel" id="loginMobileInput" maxlength="10" placeholder="98XXXXXXXX" value="9826012345" class="w-full px-3 py-2.5 text-sm font-semibold tracking-wider bg-transparent text-slate-900 dark:text-white outline-none">
+          </div>
+          <p class="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+            <i class="fa-solid fa-circle-info text-blue-500"></i> Demo mode: Any 10-digit number is accepted.
+          </p>
+        </div>
+
+        <button onclick="requestLoginOTP()" class="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl text-xs tracking-wide shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 transition-transform active:scale-[0.98] touch-target">
+          <span>Get OTP / ओटीपी प्राप्त करें</span>
+          <i class="fa-solid fa-arrow-right text-[11px]"></i>
+        </button>
+      </div>
+
+      <!-- STEP 2: OTP VERIFICATION -->
+      <div id="loginStep2" class="space-y-3.5 hidden">
+        <div>
+          <div class="flex justify-between items-center mb-1.5">
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+              Enter 4-Digit OTP / ओटीपी दर्ज करें
+            </label>
+            <button onclick="backToStep1()" class="text-[10px] text-blue-600 dark:text-blue-400 hover:underline">
+              Change Number
+            </button>
+          </div>
+          
+          <!-- 4 OTP Input Boxes -->
+          <div class="flex justify-between gap-2">
+            <input type="text" maxlength="1" id="otp-1" class="otp-box w-11 h-11 sm:w-12 sm:h-12 text-center text-lg font-bold rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" value="1">
+            <input type="text" maxlength="1" id="otp-2" class="otp-box w-11 h-11 sm:w-12 sm:h-12 text-center text-lg font-bold rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" value="2">
+            <input type="text" maxlength="1" id="otp-3" class="otp-box w-11 h-11 sm:w-12 sm:h-12 text-center text-lg font-bold rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" value="3">
+            <input type="text" maxlength="1" id="otp-4" class="otp-box w-11 h-11 sm:w-12 sm:h-12 text-center text-lg font-bold rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" value="4">
+          </div>
+
+          <div class="flex items-center justify-between mt-2">
+            <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+              <i class="fa-solid fa-check-circle"></i> Demo OTP: 1234
+            </span>
+            <button onclick="fillDemoOTP()" class="text-[10px] font-bold text-amber-600 hover:text-amber-700 dark:text-amber-400">
+              Auto-fill 1234
+            </button>
+          </div>
+        </div>
+
+        <button onclick="verifyLoginOTP()" class="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold rounded-xl text-xs tracking-wide shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition-transform active:scale-[0.98] touch-target">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>Verify & Enter Portal / प्रवेश करें</span>
+        </button>
+      </div>
+
+      <!-- Quick Demo Bypass Button -->
+      <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+        <span class="text-[10px] sm:text-[11px] text-slate-400 font-medium">Quick Access:</span>
+        <button onclick="bypassLoginModal()" class="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-[10px] sm:text-[11px] font-bold flex items-center gap-1.5 transition-colors">
+          <span>Direct Access (Skip)</span>
+          <i class="fa-solid fa-angles-right text-[9px] text-blue-500"></i>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div id="app" class="flex flex-col md:flex-row min-h-screen w-full relative">
+
+  <!-- MOBILE SIDEBAR OVERLAY -->
+  <div id="mobileSidebarOverlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-30 hidden md:hidden transition-opacity"></div>
+
+  <!-- SIDEBAR NAVIGATION -->
+  <aside id="mainSidebar" class="fixed md:static inset-y-0 left-0 z-40 w-72 md:w-64 bg-slate-900 dark:bg-slate-950 text-slate-300 flex-shrink-0 flex flex-col justify-between border-r border-slate-800 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out h-full overflow-y-auto">
+    <div>
+      <!-- Brand Logo Header -->
+      <div class="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <!-- Mini SVG Logo -->
+          <div class="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center p-1 shadow-md">
+            <svg viewBox="0 0 160 160" class="w-full h-full">
+              <polygon points="80,10 102,22 122,12 136,30 152,38 152,60 160,80 152,100 152,122 136,130 122,148 102,138 80,150 58,138 38,148 24,130 8,122 8,100 0,80 8,60 8,38 24,30 38,12 58,22" fill="#fff9ed" stroke="#1e293b" stroke-width="2" />
+              <circle cx="80" cy="80" r="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" />
+              <path d="M 44,70 A 38,38 0 0,1 116,70" fill="none" stroke="#f97316" stroke-width="5" />
+              <path d="M 44,90 A 38,38 0 0,0 116,90" fill="none" stroke="#16a34a" stroke-width="5" />
+              <text x="80" y="94" font-weight="900" font-size="44" fill="#0f172a" text-anchor="middle">ज</text>
+            </svg>
+          </div>
+          <div>
+            <div class="font-extrabold text-base sm:text-lg text-white tracking-tight leading-none">
+              जन<span class="text-amber-400">डाटा</span> <span class="text-xs text-blue-400 font-mono">| JanData</span>
+            </div>
+            <div class="text-[9px] font-semibold tracking-wider text-slate-400 uppercase mt-1" data-i18n="appSubtitle">Public Infra Explorer</div>
+          </div>
+        </div>
+
+        <!-- Mobile Close Button -->
+        <button onclick="toggleMobileSidebar()" class="md:hidden text-slate-400 hover:text-white p-2">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="p-3 space-y-1">
+        <div class="px-3 py-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider" data-i18n="navMain">Main Views</div>
+        
+        <button onclick="switchTab('explorer')" id="nav-explorer" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors bg-blue-600 text-white shadow-md shadow-blue-600/20 touch-target">
+          <i class="fa-solid fa-chart-pie w-5 text-center"></i>
+          <span data-i18n="tabExplorer">Data Explorer</span>
+        </button>
+
+        <button onclick="switchTab('map')" id="nav-map" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs sm:text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition-colors touch-target">
+          <i class="fa-solid fa-map-marked-alt w-5 text-center text-cyan-400"></i>
+          <span data-i18n="tabMap">Interactive GIS Map</span>
+        </button>
+
+        <button onclick="switchTab('roads')" id="nav-roads" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs sm:text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition-colors touch-target">
+          <i class="fa-solid fa-road w-5 text-center"></i>
+          <span data-i18n="tabRoads">Road Projects</span>
+        </button>
+
+        <button onclick="switchTab('sources')" id="nav-sources" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs sm:text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition-colors touch-target">
+          <i class="fa-solid fa-building-columns w-5 text-center"></i>
+          <span data-i18n="tabPortals">Official Portals</span>
+        </button>
+
+        <button onclick="switchTab('integration')" id="nav-integration" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs sm:text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition-colors touch-target">
+          <i class="fa-solid fa-link w-5 text-center text-emerald-400"></i>
+          <span data-i18n="tabIntegration">e-Gram & Samagra</span>
+        </button>
+
+        <button onclick="switchTab('grievance')" id="nav-grievance" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs sm:text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition-colors touch-target">
+          <i class="fa-solid fa-bullhorn w-5 text-center text-amber-400"></i>
+          <span data-i18n="tabGrievance">Citizen Grievance</span>
+        </button>
+
+        <div class="pt-3 px-3 py-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider" data-i18n="navTools">Tools & Exports</div>
+
+        <button onclick="openExportModal()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs sm:text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition-colors touch-target">
+          <i class="fa-solid fa-file-export w-5 text-center"></i>
+          <span data-i18n="toolExport">Export Data</span>
+        </button>
+
+        <button onclick="downloadPDFReport()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs sm:text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition-colors touch-target">
+          <i class="fa-solid fa-file-pdf w-5 text-center text-rose-400"></i>
+          <span data-i18n="toolPdf">Download PDF Brief</span>
+        </button>
+
+        <button onclick="openReportModal()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs sm:text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition-colors touch-target">
+          <i class="fa-solid fa-flag-checkered w-5 text-center"></i>
+          <span data-i18n="toolAudit">Audit Brief</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Sidebar Footer / Coverage Status -->
+    <div class="p-4 border-t border-slate-800/80 bg-slate-950/40 text-xs text-slate-400 space-y-3">
+      
+      <!-- CO-FOUNDER SIDEBAR BADGE -->
+      <div class="p-2.5 rounded-xl bg-slate-800/80 border border-slate-700/80 flex items-center gap-3">
+        <img src="WhatsApp Image 2026-10-30 at 7.34.45 PM.jpg" alt="Tushar Nayare" class="w-10 h-10 rounded-full object-cover border-2 border-amber-400 flex-shrink-0 shadow">
+        <div class="min-w-0">
+          <div class="font-bold text-white text-xs truncate">Tushar Nayare</div>
+          <div class="text-[10px] text-amber-400 font-semibold truncate">Co-Founder of JanData</div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between text-slate-300 font-semibold">
+        <span data-i18n="pilotScope">Pilot Scope</span>
+        <span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" data-i18n="activeStatus">Active</span>
+      </div>
+      <p class="text-[11px] text-slate-400 leading-relaxed">
+        Madhya Pradesh <i class="fa-solid fa-chevron-right text-[9px] mx-1 text-slate-600"></i> Bhopal District
+      </p>
+
+      <!-- API Sync Status Widget Sidebar -->
+      <div class="p-2.5 rounded-lg bg-slate-800/50 border border-slate-700/50 text-[11px] leading-tight text-slate-400 space-y-1">
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-slate-300 text-[10px] uppercase tracking-wider">Gov Data API Sync</span>
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        </div>
+        <div class="text-[10px] text-emerald-400 font-mono" id="apiStatusTimestamp">Live Sync: Active</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT AREA -->
+  <main class="flex-1 flex flex-col min-w-0 overflow-y-auto max-w-full">
+
+    <!-- TOPBAR HEADER -->
+    <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-20 shadow-sm transition-colors duration-200 w-full">
+      <div class="flex items-center gap-3">
+        <!-- Mobile Sidebar Toggle Hamburger Button -->
+        <button onclick="toggleMobileSidebar()" class="md:hidden p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 focus:outline-none touch-target" aria-label="Toggle Menu">
+          <i class="fa-solid fa-bars text-lg"></i>
+        </button>
+
+        <div>
+          <div class="flex items-center gap-1.5 text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+            <span class="inline-block w-2 h-2 rounded-full bg-blue-600 dark:text-blue-400 animate-pulse"></span>
+            <span data-i18n="topTag">Public Infrastructure Desk</span>
+          </div>
+          <h1 class="text-base sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight" data-i18n="topTitle">Government Data Explorer</h1>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3 ml-auto">
+        <!-- Dark Mode Switch -->
+        <button onclick="toggleDarkMode()" class="p-2 sm:px-3 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors touch-target" title="Toggle Theme">
+          <i id="darkModeIcon" class="fa-solid fa-moon"></i>
+          <span id="darkModeLabel" class="hidden sm:inline">Dark Mode</span>
+        </button>
+
+        <!-- Language Switcher -->
+        <button onclick="toggleLanguage()" class="px-2.5 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors border border-slate-200 dark:border-slate-700 touch-target">
+          <i class="fa-solid fa-language text-blue-600 dark:text-blue-400"></i>
+          <span id="langLabel">English</span>
+        </button>
+
+        <!-- Disclaimer Button -->
+        <button onclick="toggleNoticeModal()" class="px-2.5 py-2 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/40 border border-amber-200 dark:border-amber-800 text-xs font-semibold flex items-center gap-1.5 transition-colors touch-target">
+          <i class="fa-solid fa-triangle-exclamation text-amber-600 dark:text-amber-400"></i>
+          <span class="hidden sm:inline" data-i18n="disclaimerBtn">Disclaimer</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- CONTENT WRAPPER FOR PDF EXPORT target -->
+    <div id="exportableArea" class="p-3 sm:p-6 lg:p-8 space-y-5 sm:space-y-6 max-w-7xl mx-auto w-full">
+
+      <!-- HERO BANNER -->
+      <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-900 text-white p-5 sm:p-8 shadow-xl shadow-blue-950/10">
+        <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5 sm:gap-6">
+          
+          <div class="space-y-2.5 max-w-xl">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-400/30">
+              <i class="fa-solid fa-shield-halved mr-1.5 text-xs"></i> <span data-i18n="heroBadge">Independent Public Open Data</span>
+            </span>
+            <h2 class="text-xl sm:text-3xl font-extrabold text-white tracking-tight leading-tight" data-i18n="heroTitle">
+              Transparent Data Access, District by District.
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed" data-i18n="heroDesc">
+              Explore public infrastructure projects, monitor road construction progress, verify sanctioned expenditure against verified official portals, and audit village records.
+            </p>
+          </div>
+
+          <!-- CO-FOUNDER HIGHLIGHT CARD & STATS -->
+          <div class="flex flex-col sm:flex-row md:flex-col gap-3 flex-shrink-0">
+            <!-- Tushar Nayare Profile Card -->
+            <div class="flex items-center gap-3 bg-white/10 backdrop-blur-md p-3 rounded-xl border border-white/20 shadow-lg min-w-[220px]">
+              <div class="relative flex-shrink-0">
+                <img src="WhatsApp Image 2026-10-30 at 7.34.45 PM.jpg" alt="Tushar Nayare" class="w-13 h-13 sm:w-14 sm:h-14 rounded-full object-cover border-2 border-amber-400 shadow-md">
+                <span class="absolute -bottom-1 -right-1 bg-amber-500 text-slate-950 p-1 rounded-full text-[8px] font-extrabold" title="Verified Founder">
+                  <i class="fa-solid fa-award"></i>
+                </span>
+              </div>
+              <div class="min-w-0">
+                <div class="text-xs sm:text-sm font-extrabold text-white leading-tight">Tushar Nayare</div>
+                <div class="text-[11px] font-bold text-amber-300 tracking-wide mt-0.5">Co-Founder of JanData</div>
+                <div class="text-[9px] text-slate-300 mt-0.5 flex items-center gap-1">
+                  <i class="fa-solid fa-building-columns text-emerald-400"></i> Public Data Governance
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 bg-white/10 backdrop-blur-md p-3 rounded-xl border border-white/15">
+              <div>
+                <div class="text-[10px] uppercase tracking-wider text-slate-300 font-medium" data-i18n="heroCov">Coverage</div>
+                <div class="text-sm sm:text-base font-bold text-white mt-0.5">MP / Bhopal</div>
+              </div>
+              <div class="border-l border-white/15 pl-2">
+                <div class="text-[10px] uppercase tracking-wider text-slate-300 font-medium" data-i18n="heroLen">Roads</div>
+                <div class="text-sm sm:text-base font-bold text-emerald-400 mt-0.5">38.45 km</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- TAB 1: DATA EXPLORER -->
+      <div id="tab-explorer" class="space-y-5 sm:space-y-6">
+
+        <!-- CATEGORY CARDS CAROUSEL/GRID -->
+        <div>
+          <div class="flex justify-between items-center mb-3">
+            <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <i class="fa-solid fa-layer-group text-blue-600 dark:text-blue-400"></i> <span data-i18n="secTitle">Sector Categories</span>
+            </h3>
+            <span class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium hidden sm:inline" data-i18n="secSubtitle">Select to filter domain dataset</span>
+          </div>
+
+          <!-- Touch Scrollable Grid on Mobile -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5 sm:gap-3" id="categoryCardsContainer">
+            <!-- Dynamic JavaScript injection of Category Cards -->
+          </div>
+        </div>
+
+        <!-- FILTER CONTROLS & SELECTION PANEL -->
+        <div class="bg-white dark:bg-slate-900 rounded-xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-filter text-slate-400 text-xs"></i>
+              <h4 class="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200" data-i18n="filterTitle">Demographic Filter Matrix</h4>
+            </div>
+            <button onclick="resetFilters()" class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 font-semibold flex items-center gap-1 touch-target">
+              <i class="fa-solid fa-rotate-left text-[10px]"></i> <span data-i18n="resetFilterBtn">Reset</span>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <!-- Data Category Filter -->
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1" data-i18n="labelSector">Data Sector</label>
+              <select id="categorySelect" onchange="handleCategoryChange(this.value)" class="w-full text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-slate-800 dark:text-slate-200 font-medium focus:ring-2 focus:ring-blue-500 outline-none">
+              </select>
+            </div>
+
+            <!-- State Filter -->
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1" data-i18n="labelState">State / UT</label>
+              <select id="stateSelect" onchange="handleStateChange(this.value)" class="w-full text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-slate-800 dark:text-slate-200 font-medium focus:ring-2 focus:ring-blue-500 outline-none">
+              </select>
+            </div>
+
+            <!-- District Filter -->
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1" data-i18n="labelDistrict">District</label>
+              <select id="districtSelect" onchange="handleDistrictChange(this.value)" class="w-full text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-slate-800 dark:text-slate-200 font-medium focus:ring-2 focus:ring-blue-500 outline-none">
+              </select>
+            </div>
+
+            <!-- Block Filter -->
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1" data-i18n="labelBlock">Block / Sub-Region</label>
+              <select id="blockSelect" onchange="handleBlockChange(this.value)" class="w-full text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-slate-800 dark:text-slate-200 font-medium focus:ring-2 focus:ring-blue-500 outline-none">
+              </select>
+            </div>
+          </div>
+
+          <!-- FY & Interactive Budget Range Slider Row -->
+          <div class="pt-3 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 items-center">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Financial Year (FY)</label>
+              <select id="fySelect" onchange="handleFYChange(this.value)" class="w-full text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-2 text-slate-800 dark:text-slate-200 font-medium outline-none">
+                <option value="ALL">All Financial Years</option>
+                <option value="2025-26" selected>FY 2025-26</option>
+                <option value="2024-25">FY 2024-25</option>
+                <option value="2023-24">FY 2023-24</option>
+              </select>
+            </div>
+
+            <div class="sm:col-span-3">
+              <div class="flex justify-between items-center mb-1">
+                <label class="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Sanctioned Budget Limit</label>
+                <span class="text-xs font-mono font-bold text-blue-600 dark:text-blue-400" id="budgetValueLabel">Up to ₹3.5 Crore</span>
+              </div>
+              <input type="range" id="budgetRangeSlider" min="5000000" max="35000000" step="1000000" value="35000000" oninput="handleBudgetSliderChange(this.value)" class="w-full accent-blue-600 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer">
+            </div>
+          </div>
+        </div>
+
+        <!-- STATISTICAL SUMMARY CARDS -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" id="statsGrid">
+          <div class="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+            <div>
+              <div class="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider" data-i18n="statVil">Villages</div>
+              <div class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-0.5" id="statVillageCount">0</div>
+              <div class="text-[10px] text-slate-400 mt-0.5 hidden sm:block" data-i18n="statVilSub">Matching filters</div>
+            </div>
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center text-lg sm:text-xl flex-shrink-0">
+              <i class="fa-solid fa-tree-city"></i>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+            <div>
+              <div class="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider" data-i18n="statProj">Projects</div>
+              <div class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-0.5" id="statProjectsCount">0</div>
+              <div class="text-[10px] text-slate-400 mt-0.5 hidden sm:block" data-i18n="statProjSub">PMGSY/PWD</div>
+            </div>
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg sm:text-xl flex-shrink-0">
+              <i class="fa-solid fa-road-bridge"></i>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+            <div>
+              <div class="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider" data-i18n="statFund">Tracked Funds</div>
+              <div class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-0.5" id="statFundsTotal">₹0</div>
+              <div class="text-[10px] text-slate-400 mt-0.5 hidden sm:block" data-i18n="statFundSub">Sanctioned budget</div>
+            </div>
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center text-lg sm:text-xl flex-shrink-0">
+              <i class="fa-solid fa-indian-rupee-sign"></i>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+            <div>
+              <div class="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider" data-i18n="statAudit">Audit Ratio</div>
+              <div class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-0.5" id="statAuditScore">0%</div>
+              <div class="text-[10px] text-slate-400 mt-0.5 hidden sm:block" data-i18n="statAuditSub">Source verified</div>
+            </div>
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-lg sm:text-xl flex-shrink-0">
+              <i class="fa-solid fa-clipboard-check"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- DYNAMIC CHART ANALYTICS PANEL -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div class="lg:col-span-2 bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+            <div class="flex items-center justify-between">
+              <h4 class="font-bold text-slate-900 dark:text-white text-xs sm:text-sm flex items-center gap-2">
+                <i class="fa-solid fa-chart-column text-blue-600 dark:text-blue-400"></i>
+                <span data-i18n="chartBarTitle">Allocation vs Expenditure</span>
+              </h4>
+              <span class="text-[10px] font-semibold px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400" data-i18n="chartBarBadge">Live Metrics</span>
+            </div>
+            <div class="h-56 sm:h-64 relative w-full">
+              <canvas id="financialChart"></canvas>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+            <div class="flex items-center justify-between">
+              <h4 class="font-bold text-slate-900 dark:text-white text-xs sm:text-sm flex items-center gap-2">
+                <i class="fa-solid fa-chart-pie text-emerald-600 dark:text-emerald-400"></i>
+                <span data-i18n="chartPieTitle">Project Status Mix</span>
+              </h4>
+              <span class="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400" data-i18n="chartPieBadge">Audit Ratio</span>
+            </div>
+            <div class="h-56 sm:h-64 relative w-full flex items-center justify-center">
+              <canvas id="statusPieChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- SEARCHABLE VILLAGE DATA DIRECTORY TABLE -->
+        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+          <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50 dark:bg-slate-900/50">
+            <div>
+              <h3 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base" id="directoryTitle">Village Registry Directory</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" id="directorySubtitle">Listing verified villages and associated road status</p>
+            </div>
+
+            <!-- Search and Filter input -->
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+              <div class="relative w-full sm:w-64">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                <input type="text" id="villageSearchInput" oninput="renderVillageTable()" placeholder="Search village..." class="w-full pl-9 pr-3 py-2 text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 outline-none">
+              </div>
+            </div>
+          </div>
+
+          <!-- Scrollable Table Wrapper -->
+          <div class="overflow-x-auto w-full">
+            <table class="w-full text-left text-xs border-collapse min-w-[640px]">
+              <thead>
+                <tr class="bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 font-bold uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">
+                  <th class="py-3 px-4" data-i18n="thVillage">Village Name</th>
+                  <th class="py-3 px-4" data-i18n="thBlock">Block</th>
+                  <th class="py-3 px-4" data-i18n="thStatus">Status</th>
+                  <th class="py-3 px-4" data-i18n="thFund">Sanctioned</th>
+                  <th class="py-3 px-4" data-i18n="thSpent">Utilized</th>
+                  <th class="py-3 px-4" data-i18n="thAudit">Audit Status</th>
+                  <th class="py-3 px-4 text-right" data-i18n="thAction">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="villageTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Table Footer Pagination/Summary -->
+          <div class="p-3.5 sm:p-4 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 dark:text-slate-400 gap-2">
+            <div id="tableRecordSummary">Showing records for selected region</div>
+            <div class="flex items-center gap-1" id="tablePagination">
+              <span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded font-semibold text-[11px]">Page 1 of 1</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- INTERACTIVE GEOGRAPHIC GIS MAP -->
+      <div id="tab-map" class="hidden space-y-4">
+        <div class="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div>
+            <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <i class="fa-solid fa-map-location-dot text-cyan-500"></i> Bhopal District Interactive Geo GIS Map
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Click any map pin to view GPS coordinates and road project progress.</p>
+          </div>
+          <div class="flex items-center gap-2 text-xs flex-wrap">
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-semibold"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Completed</span>
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 font-semibold"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Construction</span>
+          </div>
+        </div>
+
+        <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-xl relative w-full">
+          <div id="gisMap" class="w-full h-[380px] sm:h-[500px] z-10"></div>
+        </div>
+      </div>
+
+      <!-- TAB 2: ROAD PROJECTS -->
+      <div id="tab-roads" class="hidden space-y-5 sm:space-y-6">
+
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white" data-i18n="roadTitle">Road Infrastructure Directory</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" data-i18n="roadSub">PMGSY and State PWD road projects in pilot region</p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap" data-i18n="filterStatusLabel">Filter Status:</span>
+            <select id="roadStatusFilter" onchange="renderRoadsTable()" class="text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-700 dark:text-slate-200 outline-none font-medium">
+              <option value="ALL">All Statuses</option>
+              <option value="Completed">Completed</option>
+              <option value="Under Construction">Under Construction</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Visual Summaries -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          <div class="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Completion Mix</div>
+            <div class="flex items-center gap-3">
+              <div class="relative w-14 h-14 flex-shrink-0">
+                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                  <path class="text-slate-200 dark:text-slate-800" stroke-width="4" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                  <path class="text-emerald-500" stroke-width="4" stroke-dasharray="65, 100" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center font-bold text-xs text-slate-800 dark:text-slate-200">65%</div>
+              </div>
+              <div>
+                <div class="text-sm font-bold text-slate-800 dark:text-slate-200">8 Completed</div>
+                <div class="text-xs text-slate-500 dark:text-slate-400">4 in progress</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Total Executed</div>
+            <div class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">38.45 KM</div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Avg 3.2 KM per project</p>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Sanctioned Fund</div>
+            <div class="text-xl sm:text-2xl font-extrabold text-blue-600 dark:text-blue-400">₹14.85 Cr</div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">PMGSY & PWD Cumulative</p>
+          </div>
+        </div>
+
+        <!-- ROAD PROJECTS TABLE -->
+        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+          <div class="overflow-x-auto w-full">
+            <table class="w-full text-left text-xs border-collapse min-w-[600px]">
+              <thead>
+                <tr class="bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 font-bold uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">
+                  <th class="py-3 px-4">Road Project Route</th>
+                  <th class="py-3 px-4">Block</th>
+                  <th class="py-3 px-4">Length</th>
+                  <th class="py-3 px-4">Status</th>
+                  <th class="py-3 px-4">Sanctioned Budget</th>
+                  <th class="py-3 px-4">Source</th>
+                  <th class="py-3 px-4 text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody id="roadsTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TAB 3: OFFICIAL PORTALS & DATA SOURCES -->
+      <div id="tab-sources" class="hidden space-y-5 sm:space-y-6">
+
+        <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <h3 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-1" data-i18n="portalHead">Official Government Data Portals</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-3xl" data-i18n="portalSub">
+            Cross-reference against verified state and national portals. Verify tender notices, GIS mapping datasets, PMGSY scheme progress, and CAG audit disclosures.
+          </p>
+        </div>
+
+        <!-- LIVE API HEALTH MATRIX -->
+        <div class="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+          <h4 class="font-bold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
+            <i class="fa-solid fa-server text-emerald-500"></i> Government API Integration Health
+          </h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3" id="apiHealthGrid">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4" id="portalsGrid">
+        </div>
+
+      </div>
+
+      <!-- TAB 4: E-GRAM SWARAJ & SAMAGRA INTEGRATION -->
+      <div id="tab-integration" class="hidden space-y-5 sm:space-y-6">
+        <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-1.5">
+          <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-base sm:text-lg">
+            <i class="fa-solid fa-link"></i>
+            <h3 data-i18n="integHead">e-Gram Swaraj & Samagra Portals</h3>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed" data-i18n="integSub">
+            Access Panchayati Raj action plans and MP Samagra ID member verification directly.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+          <!-- Samagra Card -->
+          <div class="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between space-y-4">
+            <div class="space-y-2.5">
+              <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center text-lg sm:text-xl">
+                <i class="fa-solid fa-id-card"></i>
+              </div>
+              <h4 class="font-bold text-slate-900 dark:text-white text-base">Samagra Portal (समग्र पोर्टल)</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                Check MP Samagra Family/Member IDs, verify e-KYC status, and view social security pension directory records directly.
+              </p>
+            </div>
+            <a href="https://samagra.gov.in/" target="_blank" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-colors touch-target">
+              <span>Visit Samagra Portal</span>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+            </a>
+          </div>
+
+          <!-- e-Gram Swaraj Card -->
+          <div class="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between space-y-4">
+            <div class="space-y-2.5">
+              <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg sm:text-xl">
+                <i class="fa-solid fa-landmark"></i>
+              </div>
+              <h4 class="font-bold text-slate-900 dark:text-white text-base">e-Gram Swaraj (ई-ग्राम स्वराज)</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                Inspect sanctioned Gram Panchayat action plans, financial progress reports, village expenditure vouchers, and audit status.
+              </p>
+            </div>
+            <a href="https://egramswaraj.gov.in/" target="_blank" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-colors touch-target">
+              <span>Visit e-Gram Swaraj Portal</span>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 5: CITIZEN GRIEVANCE PORTAL -->
+      <div id="tab-grievance" class="hidden space-y-5 sm:space-y-6">
+        <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-1.5">
+          <div class="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold text-base sm:text-lg">
+            <i class="fa-solid fa-bullhorn"></i>
+            <h3 data-i18n="grievHead">Public Infrastructure Grievance Portal</h3>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed" data-i18n="grievSub">
+            Lodge complaints regarding damaged roads, delayed works, or budget discrepancies directly to auditor monitoring logs.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6">
+          <!-- Grievance Form -->
+          <div class="lg:col-span-2 bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+            <h4 class="font-bold text-xs sm:text-sm text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-2">Submit New Audit Issue</h4>
+            
+            <form onsubmit="handleGrievanceSubmit(event)" class="space-y-3 sm:space-y-4 text-xs">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div>
+                  <label class="block font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Citizen Name</label>
+                  <input type="text" id="grievName" required placeholder="e.g. Rahul Sharma" class="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Contact Number</label>
+                  <input type="tel" id="grievPhone" required placeholder="e.g. 9876543210" class="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div>
+                  <label class="block font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Location / Village</label>
+                  <input type="text" id="grievLoc" required placeholder="e.g. Acharpura, Phanda" class="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Category</label>
+                  <select id="grievCat" class="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500">
+                    <option>Road Damage / Potholes</option>
+                    <option>Delayed Construction Work</option>
+                    <option>Fund Allocation Discrepancy</option>
+                    <option>Water / Sanitation Issue</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Complaint Details</label>
+                <textarea id="grievDesc" rows="3" required placeholder="Describe the problem or road location in detail..." class="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+              </div>
+
+              <button type="submit" class="w-full sm:w-auto px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold flex items-center justify-center gap-2 transition-colors touch-target">
+                <i class="fa-solid fa-paper-plane"></i>
+                <span>Submit Grievance Ticket</span>
+              </button>
+            </form>
+          </div>
+
+          <!-- Submitted Tickets Track -->
+          <div class="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3 sm:space-y-4">
+            <h4 class="font-bold text-xs sm:text-sm text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-2">Recent Citizen Tickets</h4>
+            <div class="space-y-3 overflow-y-auto max-h-[400px] pr-1" id="grievanceList">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <footer class="pt-6 pb-4 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+        <div>
+          <strong class="text-slate-700 dark:text-slate-300">जनडाटा | JanData Explorer</strong> — Independent Public Infrastructure Transparency Portal.
+        </div>
+        <div class="flex items-center gap-4">
+          <a href="#" onclick="toggleNoticeModal(); return false;" class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Disclaimer</a>
+          <a href="https://pmgsy.dord.gov.in/" target="_blank" class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">PMGSY Official <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i></a>
+        </div>
+      </footer>
+
+    </div>
+  </main>
+</div>
+
+<!-- ========================================== -->
+<!-- CHATBOT WIDGET: ब्रह्मसत्यं (AI Drawer)    -->
+<!-- ========================================== -->
+<div id="aiChatWidget" class="fixed bottom-4 right-4 z-40 flex flex-col items-end">
+  <!-- Chat Window Drawer -->
+  <div id="aiChatWindow" class="hidden mb-2 w-[92vw] sm:w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col h-[400px] max-h-[75vh] animate-in slide-in-from-bottom duration-200">
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-600 p-3 text-white flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center text-xs shadow-inner font-bold">
+          <i class="fa-solid fa-om text-amber-300"></i>
+        </div>
+        <div>
+          <div class="font-bold text-xs sm:text-sm tracking-wide">ब्रह्मसत्यं</div>
+          <div class="text-[9px] text-blue-200 font-medium">Live Scheme & Data Help</div>
+        </div>
+      </div>
+      <button onclick="toggleAIChat()" class="text-white/80 hover:text-white text-base p-1">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Messages Container -->
+    <div id="aiMessages" class="flex-1 p-3 overflow-y-auto space-y-3 text-xs bg-slate-50 dark:bg-slate-950">
+      <div class="flex items-start gap-2">
+        <div class="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-[9px] font-bold flex-shrink-0 shadow">
+          ब्र
+        </div>
+        <div class="p-2.5 bg-white dark:bg-slate-800 rounded-xl rounded-tl-none border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 shadow-sm leading-relaxed text-[11px]">
+          Namaste! Main <strong class="text-blue-600 dark:text-blue-400">ब्रह्मसत्यं</strong> AI assistant hoon. Bhopal roads, Samagra ID, ya e-Gram Swaraj portal ke baare me pooch sakte hain.
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Question Chips -->
+    <div class="p-2 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex gap-1.5 overflow-x-auto text-[10px]">
+      <button onclick="sendQuickQuery('Bhopal me kitni road bani hai?')" class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 text-slate-700 dark:text-slate-300 rounded-full whitespace-nowrap border border-slate-200 dark:border-slate-700">Bhopal Roads</button>
+      <button onclick="sendQuickQuery('Samagra ID kaise check kare?')" class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 text-slate-700 dark:text-slate-300 rounded-full whitespace-nowrap border border-slate-200 dark:border-slate-700">Samagra ID</button>
+      <button onclick="sendQuickQuery('e-Gram Swaraj kya hai?')" class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 text-slate-700 dark:text-slate-300 rounded-full whitespace-nowrap border border-slate-200 dark:border-slate-700">e-Gram Swaraj</button>
+    </div>
+
+    <!-- Input Form -->
+    <form onsubmit="handleAIChatSubmit(event)" class="p-2 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex gap-2">
+      <input type="text" id="aiInput" placeholder="ब्रह्मसत्यं से पूछें (Ask a question)..." class="flex-1 px-2.5 py-1.5 text-xs bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+      <button type="submit" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-colors shadow">
+        <i class="fa-solid fa-paper-plane"></i>
+      </button>
+    </form>
+  </div>
+
+  <!-- Chatbot Floating Toggle Button -->
+  <button onclick="toggleAIChat()" class="px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-xl shadow-blue-600/40 flex items-center gap-2 transition-transform hover:scale-105 active:scale-95 border border-white/20 touch-target">
+    <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px]">
+      <i class="fa-solid fa-om text-amber-300"></i>
+    </div>
+    <span class="text-xs font-bold tracking-wide">ब्रह्मसत्यं</span>
+  </button>
+</div>
+
+<!-- MODAL: DATA DISCLAIMER -->
+<div id="noticeModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden overflow-y-auto">
+  <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 my-auto">
+    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+      <div class="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold text-sm sm:text-base">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span>Data Quality & Integrity Notice</span>
+      </div>
+      <button onclick="toggleNoticeModal()" class="text-slate-400 hover:text-slate-600 text-lg p-1">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="space-y-2.5 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+      <p>
+        <strong>1. Independent Concept:</strong> JanData is an independent public-data explorer tool and is not directly affiliated with any government department.
+      </p>
+      <p>
+        <strong>2. Sample Data Integrity:</strong> Starter entries in this pilot represent cataloged listings for Bhopal district. Missing records or unverified project parameters do not prove non-existence of roads.
+      </p>
+      <p>
+        <strong>3. Blank Funding Values:</strong> Blank financial cells are explicitly displayed as "Not Available" / "Verification Pending" rather than ₹0.
+      </p>
+    </div>
+
+    <div class="pt-2 flex justify-end">
+      <button onclick="toggleNoticeModal()" class="w-full sm:w-auto px-4 py-2 bg-slate-900 dark:bg-slate-800 text-white rounded-lg text-xs font-bold transition-colors touch-target">
+        I Understand
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: VILLAGE / PROJECT DETAILS WITH TIMELINE -->
+<div id="detailsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden overflow-y-auto">
+  <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-xl w-full p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 my-auto">
+    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+      <div>
+        <div class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider" id="modalSubTitle">District Record Detail</div>
+        <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white" id="modalTitle">Village Details</h3>
+      </div>
+      <button onclick="closeDetailsModal()" class="text-slate-400 hover:text-slate-600 text-lg p-1">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="space-y-3 text-xs" id="modalBody">
+    </div>
+
+    <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
+      <span class="text-[10px] text-slate-400">Source: PMGSY Open Data</span>
+      <button onclick="closeDetailsModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold transition-colors touch-target">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: GRIEVANCE TICKET STATUS REVIEW -->
+<div id="grievanceModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden overflow-y-auto">
+  <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 my-auto">
+    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold flex-shrink-0">
+          <i class="fa-solid fa-file-shield text-sm"></i>
+        </div>
+        <div>
+          <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Grievance Review Status</h3>
+          <div class="text-[10px] text-slate-400 font-mono" id="modalGrievId">#JD-GR-XXXX</div>
+        </div>
+      </div>
+      <button onclick="closeGrievanceModal()" class="text-slate-400 hover:text-slate-600 text-lg p-1">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="space-y-3 text-xs">
+      <div class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-1">
+        <div class="flex items-center gap-1.5 font-bold text-amber-600 dark:text-amber-400 text-xs">
+          <i class="fa-solid fa-stopwatch animate-pulse"></i>
+          <span>Official Review Window: 4-5 Working Days</span>
+        </div>
+        <p class="text-[10px] sm:text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+          Complaint forwarded to Sambhandhit Vibhag (PWD Cell). On-site verification will complete in <strong>4-5 days</strong>.
+        </p>
+      </div>
+
+      <div class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5 text-[11px]">
+        <div class="flex justify-between border-b border-slate-200/80 dark:border-slate-700/80 pb-1">
+          <span class="text-slate-500">Status:</span>
+          <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">Under Review</span>
+        </div>
+        <div class="flex justify-between border-b border-slate-200/80 dark:border-slate-700/80 pb-1">
+          <span class="text-slate-500">Citizen Name:</span>
+          <strong id="modalGrievCitizen">-</strong>
+        </div>
+        <div class="flex justify-between border-b border-slate-200/80 dark:border-slate-700/80 pb-1">
+          <span class="text-slate-500">Location:</span>
+          <strong id="modalGrievLoc">-</strong>
+        </div>
+        <div class="flex justify-between border-b border-slate-200/80 dark:border-slate-700/80 pb-1">
+          <span class="text-slate-500">Category:</span>
+          <span id="modalGrievCat">-</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-500">Date:</span>
+          <span class="font-mono" id="modalGrievDate">-</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="font-bold text-slate-700 dark:text-slate-300 mb-1">Registered Problem:</div>
+        <div class="p-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 italic text-[11px]" id="modalGrievDesc">
+          -
+        </div>
+      </div>
+    </div>
+
+    <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+      <button onclick="closeGrievanceModal()" class="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-xs transition-colors touch-target">
+        Acknowledge
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EXPORT DATA -->
+<div id="exportModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden overflow-y-auto">
+  <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 my-auto">
+    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+      <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+        <i class="fa-solid fa-download text-blue-600 dark:text-blue-400"></i> Export Active Dataset
+      </h3>
+      <button onclick="closeExportModal()" class="text-slate-400 hover:text-slate-600 text-lg p-1">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+      Download filtered village registry and road infrastructure project data for offline audit or analysis.
+    </p>
+
+    <div class="space-y-2">
+      <button onclick="exportToCSV()" class="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/30 transition-colors group touch-target">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">CSV</div>
+          <div class="text-left">
+            <div class="font-bold text-slate-800 dark:text-slate-200 text-xs">Export as CSV</div>
+            <div class="text-[10px] text-slate-400">Spreadsheet compatible format</div>
+          </div>
+        </div>
+        <i class="fa-solid fa-chevron-right text-slate-400 group-hover:text-blue-600 text-xs"></i>
+      </button>
+
+      <button onclick="exportToJSON()" class="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/30 transition-colors group touch-target">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold">JSON</div>
+          <div class="text-left">
+            <div class="font-bold text-slate-800 dark:text-slate-200 text-xs">Export Raw JSON</div>
+            <div class="text-[10px] text-slate-400">Structured developer format</div>
+          </div>
+        </div>
+        <i class="fa-solid fa-chevron-right text-slate-400 group-hover:text-blue-600 text-xs"></i>
+      </button>
+
+      <button onclick="closeExportModal(); downloadPDFReport();" class="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/30 transition-colors group touch-target">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center text-xs font-bold">PDF</div>
+          <div class="text-left">
+            <div class="font-bold text-slate-800 dark:text-slate-200 text-xs">Export Official PDF</div>
+            <div class="text-[10px] text-slate-400">Formatted summary memo</div>
+          </div>
+        </div>
+        <i class="fa-solid fa-chevron-right text-slate-400 group-hover:text-blue-600 text-xs"></i>
+      </button>
+    </div>
+
+    <div class="pt-2 flex justify-end">
+      <button onclick="closeExportModal()" class="w-full sm:w-auto px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 rounded-lg text-xs font-semibold touch-target">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: AUDIT REPORT BRIEF -->
+<div id="reportModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden overflow-y-auto">
+  <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 my-auto">
+    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-clipboard-check text-blue-600 dark:text-blue-400 text-base sm:text-lg"></i>
+        <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Audit Verification Protocol</h3>
+      </div>
+      <button onclick="closeReportModal()" class="text-slate-400 hover:text-slate-600 text-lg p-1">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="space-y-3 text-xs text-slate-600 dark:text-slate-400 leading-relaxed max-h-80 overflow-y-auto pr-1">
+      <div class="p-3 bg-blue-50 dark:bg-blue-950/50 rounded-xl border border-blue-100 dark:border-blue-900 text-blue-900 dark:text-blue-300 text-[11px]">
+        <strong>Objective:</strong> Guidelines for citizens and auditors verifying public road construction in Bhopal district.
+      </div>
+
+      <div class="space-y-1.5">
+        <h4 class="font-bold text-slate-800 dark:text-slate-200">Step 1: Obtain Project Reference Code</h4>
+        <p>Locate the specific PMGSY or PWD package number on the road sign board or JanData road list.</p>
+      </div>
+
+      <div class="space-y-1.5">
+        <h4 class="font-bold text-slate-800 dark:text-slate-200">Step 2: Cross-Reference GeoSadak GIS</h4>
+        <p>Open GeoSadak Open Data portal. Match spatial coordinates with mapped asphalt stretches.</p>
+      </div>
+
+      <div class="space-y-1.5">
+        <h4 class="font-bold text-slate-800 dark:text-slate-200">Step 3: Review Tender Financial Disclosures</h4>
+        <p>Check MP e-Procurement portal tenders to compare awarded contract value against official expenditure logs.</p>
+      </div>
+    </div>
+
+    <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+      <button onclick="closeReportModal()" class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg text-xs font-bold transition-colors touch-target">
+        Got it
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- APPLICATION JAVASCRIPT LOGIC -->
+<script>
+// MOBILE SIDEBAR TOGGLE LOGIC
+function toggleMobileSidebar() {
+  const sidebar = document.getElementById('mainSidebar');
+  const overlay = document.getElementById('mobileSidebarOverlay');
+  
+  if (sidebar.classList.contains('-translate-x-full')) {
+    sidebar.classList.remove('-translate-x-full');
+    overlay.classList.remove('hidden');
+  } else {
+    sidebar.classList.add('-translate-x-full');
+    overlay.classList.add('hidden');
+  }
+}
+
+// DEMO LOGIN MODAL HANDLING
+function requestLoginOTP() {
+  const phone = document.getElementById('loginMobileInput').value.trim();
+  if (!phone || phone.length < 10) {
+    showNoticeMessage('Please enter a valid 10-digit mobile number.');
+    return;
+  }
+  document.getElementById('loginStep1').classList.add('hidden');
+  document.getElementById('loginStep2').classList.remove('hidden');
+  
+  const firstOtp = document.getElementById('otp-1');
+  if (firstOtp) {
+    firstOtp.focus();
+    firstOtp.select();
+  }
+}
+
+function backToStep1() {
+  document.getElementById('loginStep2').classList.add('hidden');
+  document.getElementById('loginStep1').classList.remove('hidden');
+}
+
+function fillDemoOTP() {
+  document.getElementById('otp-1').value = '1';
+  document.getElementById('otp-2').value = '2';
+  document.getElementById('otp-3').value = '3';
+  document.getElementById('otp-4').value = '4';
+}
+
+function verifyLoginOTP() {
+  const o1 = document.getElementById('otp-1').value;
+  const o2 = document.getElementById('otp-2').value;
+  const o3 = document.getElementById('otp-3').value;
+  const o4 = document.getElementById('otp-4').value;
+  const code = `${o1}${o2}${o3}${o4}`;
+
+  if (code.length === 4) {
+    sessionStorage.setItem('jandata_logged_in', 'true');
+    closeLoginModalSmoothly();
+  } else {
+    showNoticeMessage('Please enter the 4-digit demo OTP (1234).');
+  }
+}
+
+function bypassLoginModal() {
+  sessionStorage.setItem('jandata_logged_in', 'true');
+  closeLoginModalSmoothly();
+}
+
+function closeLoginModalSmoothly() {
+  const modal = document.getElementById('loginModalOverlay');
+  if (modal) {
+    modal.classList.add('opacity-0', 'pointer-events-none');
+    setTimeout(() => {
+      modal.remove();
+    }, 300);
+  }
+}
+
+function showNoticeMessage(msg) {
+  const toast = document.createElement('div');
+  toast.className = 'fixed top-4 right-4 z-[60] bg-slate-900 text-white px-3.5 py-2.5 rounded-xl shadow-2xl text-xs font-semibold border border-slate-700 animate-in fade-in flex items-center gap-2 max-w-[90vw]';
+  toast.innerHTML = `<i class="fa-solid fa-circle-exclamation text-amber-400"></i> <span>${msg}</span>`;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2800);
+}
+
+document.addEventListener('input', function(e) {
+  if (e.target && e.target.classList.contains('otp-box')) {
+    if (e.target.value.length === 1) {
+      const next = e.target.nextElementSibling;
+      if (next && next.classList.contains('otp-box')) {
+        next.focus();
+        next.select();
+      }
+    }
+  }
+});
+
+// DATA STRUCTURES
+const categories = [
+  { name: "Roads & Infrastructure", icon: "fa-road", desc: "Road projects & status" },
+  { name: "Education", icon: "fa-graduation-cap", desc: "Schools & facilities" },
+  { name: "Healthcare", icon: "fa-hospital", desc: "Hospitals & PHCs" },
+  { name: "Agriculture", icon: "fa-wheat-awn", desc: "Irrigation & support" },
+  { name: "Water & Sanitation", icon: "fa-droplet", desc: "Tap water connections" },
+  { name: "Electricity", icon: "fa-bolt", desc: "Power grid electrification" },
+  { name: "Transport", icon: "fa-bus", desc: "Public transit connectivity" },
+  { name: "Government Schemes", icon: "fa-building-columns", desc: "Public welfare programmes" }
+];
+
+const states = [
+  "Madhya Pradesh", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", 
+  "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", 
+  "Karnataka", "Kerala", "Maharashtra", "Odisha", "Punjab", "Rajasthan", "Tamil Nadu", 
+  "Telangana", "Uttar Pradesh", "Uttarakhand", "West Bengal", "Delhi"
+];
+
+const districtsByState = {
+  "Madhya Pradesh": ["Bhopal", "Indore", "Gwalior", "Jabalpur", "Ujjain"],
+  "Maharashtra": ["Mumbai", "Pune", "Nagpur"],
+  "Delhi": ["Central Delhi", "New Delhi"]
+};
+
+const blocksByDistrict = {
+  "Bhopal": ["All blocks", "Phanda", "Berasia"]
+};
+
+const villageList = [
+  { name: "Acharpura", block: "Phanda", status: "Completed", fund: 14500000, spent: 14200000, verification: "PMGSY Verified", fy: "2025-26", lat: 23.352, lng: 77.382, stage: 5 },
+  { name: "Adampur Chawani", block: "Phanda", status: "Under Construction", fund: 21000000, spent: 12500000, verification: "Work Order Issued", fy: "2025-26", lat: 23.238, lng: 77.491, stage: 3 },
+  { name: "Agariya", block: "Berasia", status: "Verification Pending", fund: null, spent: null, verification: "Registry Only", fy: "2024-25", lat: 23.612, lng: 77.423, stage: 1 },
+  { name: "Amjhara", block: "Phanda", status: "Completed", fund: 9800000, spent: 9800000, verification: "PMGSY Verified", fy: "2024-25", lat: 23.211, lng: 77.345, stage: 5 },
+  { name: "Amla", block: "Berasia", status: "Verification Pending", fund: null, spent: null, verification: "Registry Only", fy: "2025-26", lat: 23.580, lng: 77.398, stage: 1 },
+  { name: "Amoni", block: "Berasia", status: "Verification Pending", fund: null, spent: null, verification: "Registry Only", fy: "2023-24", lat: 23.630, lng: 77.450, stage: 1 },
+  { name: "Amravat Kalan", block: "Phanda", status: "Completed", fund: 18200000, spent: 18000000, verification: "State PWD Verified", fy: "2025-26", lat: 23.205, lng: 77.472, stage: 5 },
+  { name: "Arwaliya", block: "Phanda", status: "Under Construction", fund: 15600000, spent: 8900000, verification: "Work Order Issued", fy: "2025-26", lat: 23.331, lng: 77.391, stage: 3 },
+  { name: "Badjhiri", block: "Phanda", status: "Completed", fund: 12000000, spent: 11900000, verification: "PMGSY Verified", fy: "2024-25", lat: 23.218, lng: 77.291, stage: 5 },
+  { name: "Bagroda", block: "Phanda", status: "Completed", fund: 31000000, spent: 30500000, verification: "State PWD Verified", fy: "2025-26", lat: 23.152, lng: 77.512, stage: 5 },
+  { name: "Balampur", block: "Berasia", status: "Completed", fund: 8900000, spent: 8900000, verification: "PMGSY Verified", fy: "2025-26", lat: 23.560, lng: 77.432, stage: 5 },
+  { name: "Bangrasia", block: "Phanda", status: "Under Construction", fund: 24000000, spent: 16000000, verification: "Work Order Issued", fy: "2025-26", lat: 23.120, lng: 77.502, stage: 3 },
+  { name: "Barkheda Nathu", block: "Phanda", status: "Completed", fund: 11500000, spent: 11400000, verification: "PMGSY Verified", fy: "2024-25", lat: 23.210, lng: 77.310, stage: 5 },
+  { name: "Barkhedi Abdulla", block: "Phanda", status: "Completed", fund: 17500000, spent: 17500000, verification: "State PWD Verified", fy: "2025-26", lat: 23.180, lng: 77.480, stage: 5 },
+  { name: "Bhanpur", block: "Phanda", status: "Completed", fund: 28000000, spent: 27800000, verification: "State PWD Verified", fy: "2025-26", lat: 23.290, lng: 77.420, stage: 5 },
+  { name: "Bilkhiriya Kalan", block: "Phanda", status: "Completed", fund: 19500000, spent: 19500000, verification: "PMGSY Verified", fy: "2024-25", lat: 23.250, lng: 77.530, stage: 5 },
+  { name: "Chanderi", block: "Phanda", status: "Completed", fund: 13200000, spent: 13000000, verification: "PMGSY Verified", fy: "2024-25", lat: 23.190, lng: 77.360, stage: 5 },
+  { name: "Chopda Kalan", block: "Berasia", status: "Under Construction", fund: 16800000, spent: 9200000, verification: "Work Order Issued", fy: "2025-26", lat: 23.540, lng: 77.440, stage: 3 },
+  { name: "Gol Khedi", block: "Phanda", status: "Completed", fund: 10400000, spent: 10400000, verification: "PMGSY Verified", fy: "2024-25", lat: 23.230, lng: 77.350, stage: 5 },
+  { name: "Intkhedi Sadak", block: "Phanda", status: "Completed", fund: 22500000, spent: 22100000, verification: "State PWD Verified", fy: "2025-26", lat: 23.370, lng: 77.400, stage: 5 },
+  { name: "Islamnagar", block: "Phanda", status: "Completed", fund: 16000000, spent: 16000000, verification: "PMGSY Verified", fy: "2025-26", lat: 23.340, lng: 77.430, stage: 5 },
+  { name: "Kalapani", block: "Phanda", status: "Completed", fund: 14000000, spent: 13800000, verification: "PMGSY Verified", fy: "2024-25", lat: 23.170, lng: 77.490, stage: 5 },
+  { name: "Kalkheda", block: "Phanda", status: "Under Construction", fund: 18500000, spent: 11000000, verification: "Work Order Issued", fy: "2025-26", lat: 23.260, lng: 77.270, stage: 3 },
+  { name: "Kanhasainya", block: "Phanda", status: "Completed", fund: 12800000, spent: 12800000, verification: "PMGSY Verified", fy: "2024-25", lat: 23.280, lng: 77.510, stage: 5 },
+  { name: "Khajuri Sadak", block: "Phanda", status: "Completed", fund: 26000000, spent: 25500000, verification: "State PWD Verified", fy: "2025-26", lat: 23.250, lng: 77.250, stage: 5 }
+];
+
+const roadProjects = [
+  { id: "RD-MP-BPL-001", route: "Phanda to Teelakhedi", block: "Phanda", length: "6.80 km", status: "Completed", fund: 27200000, source: "PMGSY / OMMAS Portal", url: "https://pmgsy.dord.gov.in/", stage: 5 },
+  { id: "RD-MP-BPL-002", route: "Barkhedeo to Garhikalan", block: "Berasia", length: "2.15 km", status: "Completed", fund: 8600000, source: "PMGSY / OMMAS Portal", url: "https://pmgsy.dord.gov.in/", stage: 5 },
+  { id: "RD-MP-BPL-003", route: "Narsinghgarh Main Road to Kolukhedi", block: "Berasia", length: "3.00 km", status: "Completed", fund: 12000000, source: "PMGSY / OMMAS Portal", url: "https://pmgsy.dord.gov.in/", stage: 5 },
+  { id: "RD-MP-BPL-004", route: "Islamnagar to Intkhedi Link", block: "Phanda", length: "4.50 km", status: "Completed", fund: 18000000, source: "State PWD MP", url: "https://www.mppwd.gov.in/", stage: 5 },
+  { id: "RD-MP-BPL-005", route: "Bagroda Industrial Corridor Approach", block: "Phanda", length: "5.20 km", status: "Completed", fund: 31000000, source: "State PWD MP", url: "https://www.mppwd.gov.in/", stage: 5 },
+  { id: "RD-MP-BPL-006", route: "Adampur Chawani Bypass Stretch", block: "Phanda", length: "4.10 km", status: "Under Construction", fund: 21000000, source: "MP e-Procurement", url: "https://mptenders.gov.in/", stage: 3 },
+  { id: "RD-MP-BPL-007", route: "Arwaliya Village Connector Road", block: "Phanda", length: "3.40 km", status: "Under Construction", fund: 15600000, source: "PMGSY / OMMAS Portal", url: "https://pmgsy.dord.gov.in/", stage: 3 },
+  { id: "RD-MP-BPL-008", route: "Bangrasia Main Road Upgrade", block: "Phanda", length: "5.10 km", status: "Under Construction", fund: 24000000, source: "MP e-Procurement", url: "https://mptenders.gov.in/", stage: 4 },
+  { id: "RD-MP-BPL-009", route: "Chopda Kalan Rural Feeder Road", block: "Berasia", length: "4.20 km", status: "Under Construction", fund: 16800000, source: "GeoSadak GIS Portal", url: "https://geosadak-pmgsy.nic.in/opendata", stage: 2 }
+];
+
+const apiHealthList = [
+  { name: "PMGSY OMMAS Central API", status: "Connected", ping: "24 ms", lastSync: "10m ago", badge: "bg-emerald-500" },
+  { name: "GeoSadak Spatial GIS Service", status: "Connected", ping: "42 ms", lastSync: "5m ago", badge: "bg-emerald-500" },
+  { name: "MP e-Procurement Tender Hub", status: "Connected", ping: "18 ms", lastSync: "2m ago", badge: "bg-emerald-500" },
+  { name: "MP Samagra ID Gateway", status: "Connected", ping: "35 ms", lastSync: "Just now", badge: "bg-emerald-500" },
+  { name: "e-Gram Swaraj Voucher Sync", status: "Optimal", ping: "29 ms", lastSync: "15m ago", badge: "bg-emerald-500" },
+  { name: "CAG Public Audit Repository", status: "Connected", ping: "51 ms", lastSync: "1h ago", badge: "bg-emerald-500" }
+];
+
+const officialPortals = [
+  { name: "PMGSY / OMMAS Portal", category: "Rural Roads & Funds", desc: "Online Management, Monitoring and Accounting System for Pradhan Mantri Gram Sadak Yojana.", link: "https://pmgsy.dord.gov.in/dbweb", badge: "Central Portal" },
+  { name: "GeoSadak GIS Portal", category: "Spatial GIS Road Maps", desc: "Official open GIS map layers for rural road network assets.", link: "https://geosadak-pmgsy.nic.in/opendata", badge: "GIS Open Data" },
+  { name: "MP e-Procurement Portal", category: "Tenders & Contracts", desc: "State tender portal for estimated project costs and contractor bids.", link: "https://mptenders.gov.in/", badge: "State Procurement" },
+  { name: "MP Public Works Dept (PWD)", category: "State Highways", desc: "Official state road works department announcements and reports.", link: "https://www.mppwd.gov.in/", badge: "State PWD" },
+  { name: "CAG Audit Reports Desk", category: "Expenditure Audit", desc: "Comptroller and Auditor General audit observations for MP works.", link: "https://cag.gov.in/ag2/madhya-pradesh/en/audit-report", badge: "Audit Reports" },
+  { name: "Bhopal District Admin", category: "Panchayat Directory", desc: "District collectorate village and Gram Panchayat administration registry.", link: "https://bhopal.nic.in/en/village-panchayats/", badge: "District Admin" }
+];
+
+let citizenTickets = [
+  {
+    id: "#JD-GR-2026-104",
+    name: "Aman Verma",
+    phone: "98260XXXXX",
+    location: "Phanda Block Connector",
+    category: "Road Damage / Potholes",
+    desc: "Major asphalt damage and deep potholes near Phanda village turn.",
+    submittedTime: "2 days ago",
+    date: "28 Oct 2026",
+    status: "Under Review"
+  }
+];
+
+const i18n = {
+  en: {
+    appSubtitle: "Public Infra Explorer",
+    navMain: "Main Views",
+    navTools: "Tools & Exports",
+    tabExplorer: "Data Explorer",
+    tabMap: "Interactive GIS Map",
+    tabRoads: "Road Projects",
+    tabPortals: "Official Portals",
+    tabIntegration: "e-Gram & Samagra",
+    tabGrievance: "Citizen Grievance",
+    toolExport: "Export Data",
+    toolPdf: "Download PDF Brief",
+    toolAudit: "Audit Brief",
+    pilotScope: "Pilot Scope",
+    activeStatus: "Active",
+    topTag: "Public Infrastructure Desk",
+    topTitle: "Government Data Explorer",
+    disclaimerBtn: "Disclaimer",
+    heroBadge: "Independent Public Open Data",
+    heroTitle: "Transparent Data Access, District by District.",
+    heroDesc: "Explore public infrastructure projects, monitor road construction progress, verify sanctioned expenditure against verified official portals, and audit village records.",
+    heroCov: "Verified Coverage",
+    heroLen: "Road Length",
+    secTitle: "Sector Categories",
+    secSubtitle: "Select to filter domain dataset",
+    filterTitle: "Demographic Filter Matrix",
+    resetFilterBtn: "Reset",
+    labelSector: "Data Sector",
+    labelState: "State / UT",
+    labelDistrict: "District",
+    labelBlock: "Block / Sub-Region",
+    statVil: "Villages",
+    statVilSub: "Matching filters",
+    statProj: "Projects",
+    statProjSub: "PMGSY/PWD",
+    statFund: "Tracked Funds",
+    statFundSub: "Sanctioned budget",
+    statAudit: "Audit Ratio",
+    statAuditSub: "Source verified",
+    chartBarTitle: "Allocation vs Expenditure",
+    chartBarBadge: "Live Metrics",
+    chartPieTitle: "Project Status Mix",
+    chartPieBadge: "Audit Ratio",
+    thVillage: "Village Name",
+    thBlock: "Block",
+    thStatus: "Status",
+    thFund: "Sanctioned",
+    thSpent: "Utilized",
+    thAudit: "Audit Status",
+    thAction: "Actions",
+    roadTitle: "Road Infrastructure Directory",
+    roadSub: "PMGSY and State PWD road projects in pilot region",
+    filterStatusLabel: "Filter Status:",
+    portalHead: "Official Government Data Portals",
+    portalSub: "JanData provides cross-referencing against official state and national portals.",
+    integHead: "e-Gram Swaraj & Samagra Portals",
+    integSub: "Access Panchayati Raj action plans and MP Samagra ID member verification directly.",
+    grievHead: "Public Infrastructure Grievance Portal",
+    grievSub: "Lodge complaints regarding damaged roads, delayed works, or budget discrepancies."
+  },
+  hi: {
+    appSubtitle: "सार्वजनिक अवसंरचना खोज",
+    navMain: "मुख्य व्यू",
+    navTools: "टूल एवं निर्यात",
+    tabExplorer: "डेटा एक्सप्लोरर",
+    tabMap: "जीआईएस नक्शा (Map)",
+    tabRoads: "सड़क परियोजनाएं",
+    tabPortals: "आधिकारिक पोर्टल",
+    tabIntegration: "ई-ग्राम और समग्र",
+    tabGrievance: "नागरिक शिकायत",
+    toolExport: "डेटा डाउनलोड",
+    toolPdf: "पीडीएफ रिपोर्ट",
+    toolAudit: "ऑडिट रिपोर्ट",
+    pilotScope: "पायलट क्षेत्र",
+    activeStatus: "सक्रिय",
+    topTag: "सार्वजनिक अवसंरचना डेस्क",
+    topTitle: "सरकारी डेटा एक्सप्लोरर",
+    disclaimerBtn: "अस्वीकरण",
+    heroBadge: "स्वतंत्र सार्वजनिक ओपन डेटा",
+    heroTitle: "पारदर्शी डेटा एक्सेस, ज़िलेवार।",
+    heroDesc: "सार्वजनिक बुनियादी ढांचा परियोजनाओं का अन्वेषण करें, सड़क निर्माण की प्रगति की निगरानी करें और ग्राम-स्तरीय रिकॉर्ड की जांच करें।",
+    heroCov: "सत्यापित क्षेत्र",
+    heroLen: "सड़क लंबाई",
+    secTitle: "क्षेत्रीय श्रेणियां (Sectors)",
+    secSubtitle: "फ़िल्टर करने के लिए चुनें",
+    filterTitle: "क्षेत्रीय फ़िल्टर मैट्रिक्स",
+    resetFilterBtn: "रीसेट",
+    labelSector: "डेटा सेक्टर",
+    labelState: "राज्य / केंद्र शासित प्रदेश",
+    labelDistrict: "ज़िला",
+    labelBlock: "ब्लॉक / क्षेत्र",
+    statVil: "गांव",
+    statVilSub: "फ़िल्टर अनुसार",
+    statProj: "परियोजनाएं",
+    statProjSub: "PMGSY/PWD",
+    statFund: "ट्रैक फंड",
+    statFundSub: "स्वीकृत बजट",
+    statAudit: "ऑडिट अनुपात",
+    statAuditSub: "स्रोत सत्यापित",
+    chartBarTitle: "आवंटन बनाम व्यय",
+    chartBarBadge: "लाइव आंकड़े",
+    chartPieTitle: "परियोजना स्थिति",
+    chartPieBadge: "ऑडिट अनुपात",
+    thVillage: "गांव का नाम",
+    thBlock: "ब्लॉक",
+    thStatus: "स्थिति",
+    thFund: "स्वीकृत",
+    thSpent: "उपयोग",
+    thAudit: "ऑडिट स्थिति",
+    thAction: "कार्रवाई",
+    roadTitle: "सड़क अवसंरचना निर्देशिका",
+    roadSub: "PMGSY और राज्य PWD सड़क परियोजनाओं की सूची",
+    filterStatusLabel: "स्थिति फ़िल्टर:",
+    portalHead: "आधिकारिक सरकारी डेटा पोर्टल",
+    portalSub: "JanData आधिकारिक पोर्टलों के साथ पारदर्शी क्रॉस-संदर्भ प्रदान करता है।",
+    integHead: "ई-ग्राम स्वराज और समग्र पोर्टल",
+    integSub: "पंचायती राज रिपोर्ट और एमपी समग्र आईडी सत्यापन एक्सेस करें।",
+    grievHead: "सार्वजनिक अवसंरचना शिकायत पोर्टल",
+    grievSub: "क्षतिग्रस्त सड़कों या बजट विसंगतियों से संबंधित शिकायतें दर्ज करें।"
+  }
+};
+
+let currentLang = 'en';
+let currentSelectedCategory = "Roads & Infrastructure";
+let currentSelectedState = "Madhya Pradesh";
+let currentSelectedDistrict = "Bhopal";
+let currentSelectedBlock = "All blocks";
+let currentFY = "2025-26";
+let currentMaxBudget = 35000000;
+let financialChartInstance = null;
+let statusPieChartInstance = null;
+let leafletMapInstance = null;
+
+function formatINR(val) {
+  if (val === null || val === undefined) return '<span class="text-slate-400 italic font-mono">N/A</span>';
+  return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val);
+}
+
+function toggleDarkMode() {
+  const isDark = document.documentElement.classList.toggle('dark');
+  const icon = document.getElementById('darkModeIcon');
+  const label = document.getElementById('darkModeLabel');
+  
+  if (isDark) {
+    icon.className = 'fa-solid fa-sun text-amber-400';
+    label.textContent = 'Light Mode';
+  } else {
+    icon.className = 'fa-solid fa-moon text-slate-600';
+    label.textContent = 'Dark Mode';
+  }
+  
+  initOrUpdateCharts();
+}
+
+function toggleLanguage() {
+  currentLang = currentLang === 'en' ? 'hi' : 'en';
+  document.getElementById('langLabel').textContent = currentLang === 'en' ? 'English' : 'हिंदी';
+  
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (i18n[currentLang][key]) {
+      el.textContent = i18n[currentLang][key];
+    }
+  });
+
+  renderVillageTable();
+  renderRoadsTable();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  initCategoryCards();
+  initDropdowns();
+  renderVillageTable();
+  renderRoadsTable();
+  renderPortalsGrid();
+  renderApiHealthGrid();
+  renderGrievanceList();
+  updateStats();
+  initOrUpdateCharts();
+
+  if (sessionStorage.getItem('jandata_logged_in') === 'true') {
+    const modal = document.getElementById('loginModalOverlay');
+    if (modal) modal.remove();
+  }
+});
+
+// Auto adjust charts/map on window resize
+window.addEventListener('resize', () => {
+  if (leafletMapInstance) {
+    leafletMapInstance.invalidateSize();
+  }
+});
+
+function renderApiHealthGrid() {
+  const container = document.getElementById('apiHealthGrid');
+  if(!container) return;
+  container.innerHTML = apiHealthList.map(api => `
+    <div class="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-lg border border-slate-200 dark:border-slate-700/80 flex items-center justify-between text-xs">
+      <div class="space-y-0.5">
+        <div class="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-[11px] sm:text-xs">
+          <span class="w-2 h-2 rounded-full ${api.badge}"></span>
+          ${api.name}
+        </div>
+        <div class="text-[9px] sm:text-[10px] text-slate-400">Sync: ${api.lastSync}</div>
+      </div>
+      <div class="text-right">
+        <span class="font-mono text-[10px] sm:text-[11px] font-bold text-emerald-600 dark:text-emerald-400">${api.ping}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function initLeafletMap() {
+  if (leafletMapInstance) return;
+
+  const mapContainer = document.getElementById('gisMap');
+  if (!mapContainer) return;
+
+  leafletMapInstance = L.map('gisMap').setView([23.2599, 77.4126], 11);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18,
+    attribution: '© OpenStreetMap | JanData GIS'
+  }).addTo(leafletMapInstance);
+
+  villageList.forEach(v => {
+    if (!v.lat || !v.lng) return;
+
+    const isCompleted = v.status === 'Completed';
+    const markerColor = isCompleted ? '#10b981' : (v.status === 'Under Construction' ? '#3b82f6' : '#f59e0b');
+
+    const customIcon = L.divIcon({
+      className: 'custom-map-pin',
+      html: `<div style="background-color: ${markerColor}; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.4);"></div>`,
+      iconSize: [14, 14],
+      iconAnchor: [7, 7]
+    });
+
+    const marker = L.marker([v.lat, v.lng], { icon: customIcon }).addTo(leafletMapInstance);
+
+    const popupContent = `
+      <div class="p-2 space-y-1.5 text-xs text-slate-100 font-sans">
+        <div class="font-extrabold text-xs sm:text-sm text-blue-400">${v.name} Village</div>
+        <div class="text-[10px] text-slate-300">Block: <strong>${v.block}</strong></div>
+        <div class="text-[10px]">Status: <span class="font-bold text-emerald-400">${v.status}</span></div>
+        <div class="text-[10px] font-mono">Sanctioned: ${v.fund ? formatINR(v.fund) : 'Pending'}</div>
+        <button onclick="openVillageModal('${v.name}')" class="mt-1 w-full py-1 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded text-[10px] touch-target">
+          View Audit Details
+        </button>
+      </div>
+    `;
+
+    marker.bindPopup(popupContent);
+  });
+}
+
+function initCategoryCards() {
+  const container = document.getElementById('categoryCardsContainer');
+  container.innerHTML = categories.map(cat => {
+    const isSelected = cat.name === currentSelectedCategory;
+    return `
+      <div onclick="selectCategoryCard('${cat.name}')" 
+           class="p-2.5 sm:p-3 rounded-xl border transition-all cursor-pointer flex flex-col items-center text-center touch-target ${
+             isSelected 
+               ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-600/20 ring-2 ring-blue-500/30' 
+               : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:border-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+           }">
+        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-xs sm:text-sm ${isSelected ? 'bg-white/20 text-white' : 'bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400'} mb-1.5">
+          <i class="fa-solid ${cat.icon}"></i>
+        </div>
+        <div class="text-[10px] sm:text-[11px] font-bold leading-tight ${isSelected ? 'text-white' : 'text-slate-800 dark:text-slate-200'}">${cat.name}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function selectCategoryCard(catName) {
+  currentSelectedCategory = catName;
+  document.getElementById('categorySelect').value = catName;
+  initCategoryCards();
+  renderVillageTable();
+  updateStats();
+  initOrUpdateCharts();
+}
+
+function initDropdowns() {
+  const catSelect = document.getElementById('categorySelect');
+  catSelect.innerHTML = categories.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+  catSelect.value = currentSelectedCategory;
+
+  const stateSelect = document.getElementById('stateSelect');
+  stateSelect.innerHTML = states.map(s => `<option value="${s}">${s}</option>`).join('');
+  stateSelect.value = currentSelectedState;
+
+  updateDistrictDropdown();
+  updateBlockDropdown();
+}
+
+function updateDistrictDropdown() {
+  const districtSelect = document.getElementById('districtSelect');
+  const availableDistricts = districtsByState[currentSelectedState] || [];
+  
+  if (availableDistricts.length > 0) {
+    districtSelect.innerHTML = availableDistricts.map(d => `<option value="${d}">${d}</option>`).join('');
+    currentSelectedDistrict = availableDistricts[0];
+  } else {
+    districtSelect.innerHTML = `<option value="">Data Not Integrated</option>`;
+    currentSelectedDistrict = "";
+  }
+}
+
+function updateBlockDropdown() {
+  const blockSelect = document.getElementById('blockSelect');
+  const availableBlocks = blocksByDistrict[currentSelectedDistrict] || ["All blocks"];
+  
+  blockSelect.innerHTML = availableBlocks.map(b => `<option value="${b}">${b}</option>`).join('');
+  currentSelectedBlock = availableBlocks[0];
+}
+
+function handleFYChange(val) {
+  currentFY = val;
+  renderVillageTable();
+  updateStats();
+  initOrUpdateCharts();
+}
+
+function handleBudgetSliderChange(val) {
+  currentMaxBudget = parseInt(val, 10);
+  document.getElementById('budgetValueLabel').textContent = `Up to ₹${(currentMaxBudget/10000000).toFixed(1)} Cr`;
+  renderVillageTable();
+  updateStats();
+  initOrUpdateCharts();
+}
+
+function handleCategoryChange(val) {
+  currentSelectedCategory = val;
+  initCategoryCards();
+  renderVillageTable();
+  updateStats();
+  initOrUpdateCharts();
+}
+
+function handleStateChange(val) {
+  currentSelectedState = val;
+  updateDistrictDropdown();
+  updateBlockDropdown();
+  renderVillageTable();
+  updateStats();
+  initOrUpdateCharts();
+}
+
+function handleDistrictChange(val) {
+  currentSelectedDistrict = val;
+  updateBlockDropdown();
+  renderVillageTable();
+  updateStats();
+  initOrUpdateCharts();
+}
+
+function handleBlockChange(val) {
+  currentSelectedBlock = val;
+  renderVillageTable();
+  updateStats();
+  initOrUpdateCharts();
+}
+
+function resetFilters() {
+  currentSelectedCategory = "Roads & Infrastructure";
+  currentSelectedState = "Madhya Pradesh";
+  currentFY = "ALL";
+  currentMaxBudget = 35000000;
+  document.getElementById('fySelect').value = "ALL";
+  document.getElementById('budgetRangeSlider').value = 35000000;
+  document.getElementById('budgetValueLabel').textContent = `Up to ₹3.5 Crore`;
+  initDropdowns();
+  initCategoryCards();
+  renderVillageTable();
+  updateStats();
+  initOrUpdateCharts();
+}
+
+function renderVillageTable() {
+  const tbody = document.getElementById('villageTableBody');
+  const searchQ = (document.getElementById('villageSearchInput').value || "").toLowerCase().trim();
+  
+  const isSupported = (currentSelectedState === "Madhya Pradesh" && currentSelectedDistrict === "Bhopal" && currentSelectedCategory === "Roads & Infrastructure");
+
+  document.getElementById('directoryTitle').textContent = isSupported ? `${currentSelectedDistrict} Village Directory` : `${currentSelectedState} Directory`;
+  document.getElementById('directorySubtitle').textContent = isSupported 
+    ? `Showing entries for ${currentSelectedBlock} block` 
+    : `No verified datasets integrated for this selection.`;
+
+  if (!isSupported) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="py-8 text-center text-slate-400">
+          <div class="max-w-xs mx-auto space-y-2">
+            <i class="fa-solid fa-folder-open text-2xl text-slate-300 dark:text-slate-700"></i>
+            <div class="font-bold text-slate-600 dark:text-slate-400">No Dataset Connected</div>
+            <p class="text-[11px]">Pilot dataset active for <strong>Madhya Pradesh &rarr; Bhopal &rarr; Roads</strong>.</p>
+          </div>
+        </td>
+      </tr>
+    `;
+    document.getElementById('tableRecordSummary').textContent = '0 entries found';
+    return;
+  }
+
+  const filtered = villageList.filter(item => {
+    const matchesBlock = (currentSelectedBlock === "All blocks" || item.block === currentSelectedBlock);
+    const matchesSearch = item.name.toLowerCase().includes(searchQ) || item.block.toLowerCase().includes(searchQ);
+    const matchesFY = (currentFY === "ALL" || item.fy === currentFY);
+    const matchesBudget = !item.fund || item.fund <= currentMaxBudget;
+    return matchesBlock && matchesSearch && matchesFY && matchesBudget;
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="py-8 text-center text-slate-400 text-xs">
+          No village matching active filters found.
+        </td>
+      </tr>
+    `;
+    document.getElementById('tableRecordSummary').textContent = '0 matching records';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(v => {
+    let statusBadge = '';
+    if (v.status === 'Completed') {
+      statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"><i class="fa-solid fa-circle-check mr-1"></i> Completed</span>`;
+    } else if (v.status === 'Under Construction') {
+      statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800"><i class="fa-solid fa-person-digging mr-1"></i> In Progress</span>`;
+    } else {
+      statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800"><i class="fa-solid fa-clock mr-1"></i> Pending Audit</span>`;
+    }
+
+    return `
+      <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+        <td class="py-3 px-4 font-bold text-slate-900 dark:text-slate-100">${v.name}</td>
+        <td class="py-3 px-4 text-slate-600 dark:text-slate-400">${v.block}</td>
+        <td class="py-3 px-4">${statusBadge}</td>
+        <td class="py-3 px-4 font-mono font-medium">${formatINR(v.fund)}</td>
+        <td class="py-3 px-4 font-mono font-medium">${formatINR(v.spent)}</td>
+        <td class="py-3 px-4 text-slate-500 dark:text-slate-400 font-medium text-[11px]">${v.verification}</td>
+        <td class="py-3 px-4 text-right">
+          <button onclick="openVillageModal('${v.name}')" class="px-2.5 py-1 rounded bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/40 hover:text-blue-600 dark:hover:text-blue-400 text-slate-600 dark:text-slate-300 font-semibold text-[10px] sm:text-[11px] transition-colors touch-target">
+            View Entry
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  document.getElementById('tableRecordSummary').textContent = `Showing ${filtered.length} of ${villageList.length} entries`;
+}
+
+function renderRoadsTable() {
+  const tbody = document.getElementById('roadsTableBody');
+  const statusFilter = document.getElementById('roadStatusFilter').value;
+
+  const filtered = roadProjects.filter(r => {
+    if (statusFilter === "ALL") return true;
+    return r.status === statusFilter;
+  });
+
+  tbody.innerHTML = filtered.map(r => {
+    let statusClass = r.status === 'Completed' ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' : 'bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800';
+    return `
+      <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+        <td class="py-3.5 px-4">
+          <div class="font-bold text-slate-900 dark:text-slate-100">${r.route}</div>
+          <div class="text-[10px] font-mono text-slate-400 mt-0.5">${r.id}</div>
+        </td>
+        <td class="py-3.5 px-4 text-slate-600 dark:text-slate-400">${r.block}</td>
+        <td class="py-3.5 px-4 font-mono font-bold text-slate-700 dark:text-slate-300">${r.length}</td>
+        <td class="py-3.5 px-4">
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${statusClass}">
+            ${r.status}
+          </span>
+        </td>
+        <td class="py-3.5 px-4 font-mono font-semibold">${formatINR(r.fund)}</td>
+        <td class="py-3.5 px-4 text-slate-600 dark:text-slate-400 text-[11px]">${r.source}</td>
+        <td class="py-3.5 px-4 text-center">
+          <a href="${r.url}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-100 dark:bg-slate-800 hover:bg-blue-600 hover:text-white text-slate-700 dark:text-slate-300 font-semibold text-[10px] sm:text-[11px] transition-colors touch-target">
+            <span>Verify</span>
+            <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+          </a>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderPortalsGrid() {
+  const container = document.getElementById('portalsGrid');
+  container.innerHTML = officialPortals.map(p => `
+    <div class="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between hover:border-blue-300 dark:hover:border-blue-700 transition-all">
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-bold bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-900">${p.badge}</span>
+          <i class="fa-solid fa-building-columns text-slate-300 dark:text-slate-700"></i>
+        </div>
+        <h4 class="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm mt-1">${p.name}</h4>
+        <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 leading-relaxed">${p.desc}</p>
+      </div>
+      <div class="pt-3 border-t border-slate-100 dark:border-slate-800 mt-3 flex items-center justify-between">
+        <span class="text-[9px] sm:text-[10px] font-semibold text-slate-400">${p.category}</span>
+        <a href="${p.link}" target="_blank" class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 flex items-center gap-1 touch-target">
+          <span>Open</span>
+          <i class="fa-solid fa-chevron-right text-[9px]"></i>
+        </a>
+      </div>
+    </div>
+  `).join('');
+}
+
+function initOrUpdateCharts() {
+  const isDark = document.documentElement.classList.contains('dark');
+  const textColor = isDark ? '#94a3b8' : '#64748b';
+  const gridColor = isDark ? '#334155' : '#e2e8f0';
+
+  const isSupported = (currentSelectedState === "Madhya Pradesh" && currentSelectedDistrict === "Bhopal" && currentSelectedCategory === "Roads & Infrastructure");
+
+  const barCtx = document.getElementById('financialChart').getContext('2d');
+  
+  let phandaFund = 0, phandaSpent = 0, berasiaFund = 0, berasiaSpent = 0;
+  if (isSupported) {
+    villageList.forEach(v => {
+      const matchesFY = (currentFY === "ALL" || v.fy === currentFY);
+      const matchesBudget = !v.fund || v.fund <= currentMaxBudget;
+      if (matchesFY && matchesBudget) {
+        if (v.block === 'Phanda') {
+          phandaFund += (v.fund || 0);
+          phandaSpent += (v.spent || 0);
+        } else if (v.block === 'Berasia') {
+          berasiaFund += (v.fund || 0);
+          berasiaSpent += (v.spent || 0);
+        }
+      }
+    });
+  }
+
+  if (financialChartInstance) {
+    financialChartInstance.destroy();
+  }
+
+  financialChartInstance = new Chart(barCtx, {
+    type: 'bar',
+    data: {
+      labels: ['Phanda', 'Berasia'],
+      datasets: [
+        {
+          label: 'Sanctioned (₹ Cr)',
+          data: [ (phandaFund/10000000).toFixed(2), (berasiaFund/10000000).toFixed(2) ],
+          backgroundColor: '#2563eb',
+          borderRadius: 6
+        },
+        {
+          label: 'Spent (₹ Cr)',
+          data: [ (phandaSpent/10000000).toFixed(2), (berasiaSpent/10000000).toFixed(2) ],
+          backgroundColor: '#10b981',
+          borderRadius: 6
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: textColor, font: { family: 'Inter', size: 10 } } }
+      },
+      scales: {
+        x: { ticks: { color: textColor, font: { size: 10 } }, grid: { display: false } },
+        y: { ticks: { color: textColor, font: { size: 10 } }, grid: { color: gridColor } }
+      }
+    }
+  });
+
+  const pieCtx = document.getElementById('statusPieChart').getContext('2d');
+  
+  let completedCount = 0, inProgressCount = 0, pendingCount = 0;
+  if (isSupported) {
+    villageList.forEach(v => {
+      const matchesFY = (currentFY === "ALL" || v.fy === currentFY);
+      const matchesBudget = !v.fund || v.fund <= currentMaxBudget;
+      if (matchesFY && matchesBudget) {
+        if (v.status === 'Completed') completedCount++;
+        else if (v.status === 'Under Construction') inProgressCount++;
+        else pendingCount++;
+      }
+    });
+  }
+
+  if (statusPieChartInstance) {
+    statusPieChartInstance.destroy();
+  }
+
+  statusPieChartInstance = new Chart(pieCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Completed', 'Construction', 'Pending'],
+      datasets: [{
+        data: [completedCount, inProgressCount, pendingCount],
+        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b'],
+        borderWidth: 2,
+        borderColor: isDark ? '#0f172a' : '#ffffff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { color: textColor, font: { family: 'Inter', size: 10 } } }
+      }
+    }
+  });
+}
+
+function updateStats() {
+  const isSupported = (currentSelectedState === "Madhya Pradesh" && currentSelectedDistrict === "Bhopal" && currentSelectedCategory === "Roads & Infrastructure");
+  
+  if (!isSupported) {
+    document.getElementById('statVillageCount').textContent = "0";
+    document.getElementById('statProjectsCount').textContent = "0";
+    document.getElementById('statFundsTotal').textContent = "₹0";
+    document.getElementById('statAuditScore').textContent = "0%";
+    return;
+  }
+
+  const filteredVillages = villageList.filter(v => {
+    const matchesBlock = (currentSelectedBlock === "All blocks" || v.block === currentSelectedBlock);
+    const matchesFY = (currentFY === "ALL" || v.fy === currentFY);
+    const matchesBudget = !v.fund || v.fund <= currentMaxBudget;
+    return matchesBlock && matchesFY && matchesBudget;
+  });
+
+  const totalFunds = filteredVillages.reduce((acc, v) => acc + (v.fund || 0), 0);
+  const verifiedCount = filteredVillages.filter(v => v.status === 'Completed').length;
+  const auditScore = filteredVillages.length > 0 ? Math.round((verifiedCount / filteredVillages.length) * 100) : 0;
+
+  document.getElementById('statVillageCount').textContent = filteredVillages.length;
+  document.getElementById('statProjectsCount').textContent = roadProjects.length;
+  document.getElementById('statFundsTotal').textContent = `₹${(totalFunds / 10000000).toFixed(1)} Cr`;
+  document.getElementById('statAuditScore').textContent = `${auditScore}%`;
+}
+
+function switchTab(tabId) {
+  ['explorer', 'map', 'roads', 'sources', 'integration', 'grievance'].forEach(t => {
+    const tabEl = document.getElementById(`tab-${t}`);
+    if (tabEl) tabEl.classList.add('hidden');
+    const navBtn = document.getElementById(`nav-${t}`);
+    if (navBtn) {
+      navBtn.classList.remove('bg-blue-600', 'text-white', 'shadow-md', 'shadow-blue-600/20');
+      navBtn.classList.add('text-slate-400', 'hover:text-slate-100', 'hover:bg-slate-800/60');
+    }
+  });
+
+  const activeTabEl = document.getElementById(`tab-${tabId}`);
+  if (activeTabEl) activeTabEl.classList.remove('hidden');
+  const activeBtn = document.getElementById(`nav-${tabId}`);
+  if (activeBtn) {
+    activeBtn.classList.add('bg-blue-600', 'text-white', 'shadow-md', 'shadow-blue-600/20');
+    activeBtn.classList.remove('text-slate-400', 'hover:text-slate-100', 'hover:bg-slate-800/60');
+  }
+
+  // Close mobile sidebar on tab switch
+  if (window.innerWidth < 768) {
+    const sidebar = document.getElementById('mainSidebar');
+    const overlay = document.getElementById('mobileSidebarOverlay');
+    if (sidebar && !sidebar.classList.contains('-translate-x-full')) {
+      sidebar.classList.add('-translate-x-full');
+      overlay.classList.add('hidden');
+    }
+  }
+
+  if (tabId === 'map') {
+    setTimeout(() => {
+      initLeafletMap();
+      if (leafletMapInstance) leafletMapInstance.invalidateSize();
+    }, 200);
+  }
+}
+
+// AI CHATBOT CONTROLS: ब्रह्मसत्यं
+function toggleAIChat() {
+  document.getElementById('aiChatWindow').classList.toggle('hidden');
+}
+
+function handleAIChatSubmit(e) {
+  e.preventDefault();
+  const input = document.getElementById('aiInput');
+  const query = input.value.trim();
+  if (!query) return;
+  
+  appendMessage(query, 'user');
+  input.value = '';
+
+  setTimeout(() => {
+    generateAIResponse(query);
+  }, 400);
+}
+
+function sendQuickQuery(qText) {
+  appendMessage(qText, 'user');
+  setTimeout(() => {
+    generateAIResponse(qText);
+  }, 400);
+}
+
+function appendMessage(text, sender) {
+  const container = document.getElementById('aiMessages');
+  const msgDiv = document.createElement('div');
+  msgDiv.className = `flex items-start gap-2 ${sender === 'user' ? 'justify-end' : ''}`;
+  
+  if (sender === 'user') {
+    msgDiv.innerHTML = `
+      <div class="p-2.5 bg-blue-600 text-white rounded-xl rounded-tr-none shadow-sm max-w-[85%] leading-relaxed text-[11px]">
+        ${text}
+      </div>
+    `;
+  } else {
+    msgDiv.innerHTML = `
+      <div class="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-[9px] font-bold flex-shrink-0 shadow">ब्र</div>
+      <div class="p-2.5 bg-white dark:bg-slate-800 rounded-xl rounded-tl-none border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 shadow-sm leading-relaxed max-w-[85%] text-[11px]">
+        ${text}
+      </div>
+    `;
+  }
+
+  container.appendChild(msgDiv);
+  container.scrollTop = container.scrollHeight;
+}
+
+function generateAIResponse(query) {
+  const q = query.toLowerCase();
+  let reply = "Aap JanData Explorer par Bhopal district ki villages ke road status, funding allocation aur official PMGSY portals cross-check kar sakte hain.";
+
+  if (q.includes('bhopal') || q.includes('road')) {
+    reply = "Bhopal district me 38.45 KM road length track ki gayi hai, jisme Phanda aur Berasia block ke 12 PMGSY/PWD road projects shamil hain.";
+  } else if (q.includes('samagra')) {
+    reply = "Samagra ID check karne ke liye 'e-Gram & Samagra' tab par jaakar samagra.gov.in official portal par visit karein.";
+  } else if (q.includes('swaraj') || q.includes('egram')) {
+    reply = "e-Gram Swaraj portal Gram Panchayats ke approved action plans ka prabandhan karta hai. Iska direct link 'e-Gram & Samagra' tab me available hai.";
+  } else if (q.includes('complaint') || q.includes('grievance')) {
+    reply = "Aap 'Citizen Grievance' tab par jaakar kharab sadak ya fund discrepancy ki shikayat darj kar sakte hain.";
+  }
+
+  appendMessage(reply, 'ai');
+}
+
+function renderGrievanceList() {
+  const container = document.getElementById('grievanceList');
+  if (!container) return;
+
+  container.innerHTML = citizenTickets.map(ticket => `
+    <div class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2 transition-all">
+      <div class="flex items-center justify-between">
+        <span class="font-mono text-[10px] font-extrabold text-blue-600 dark:text-blue-400">${ticket.id}</span>
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Under Review
+        </span>
+      </div>
+
+      <div>
+        <div class="font-bold text-slate-900 dark:text-slate-100 text-xs">${ticket.category}</div>
+        <div class="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">${ticket.desc}</div>
+      </div>
+
+      <div class="pt-1.5 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-[10px]">
+        <span class="text-slate-400">${ticket.location}</span>
+        <button onclick="openGrievanceModal('${ticket.id}')" class="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded font-bold flex items-center gap-1 shadow-sm touch-target">
+          <span>Status</span>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function handleGrievanceSubmit(e) {
+  e.preventDefault();
+  const name = document.getElementById('grievName').value.trim();
+  const phone = document.getElementById('grievPhone').value.trim();
+  const loc = document.getElementById('grievLoc').value.trim();
+  const cat = document.getElementById('grievCat').value;
+  const desc = document.getElementById('grievDesc').value.trim();
+  
+  const ticketId = `#JD-GR-2026-${Math.floor(100 + Math.random() * 900)}`;
+  
+  const newTicketObj = {
+    id: ticketId,
+    name: name,
+    phone: phone,
+    location: loc,
+    category: cat,
+    desc: desc,
+    submittedTime: "Just now",
+    date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+    status: "Under Review"
+  };
+
+  citizenTickets.unshift(newTicketObj);
+  renderGrievanceList();
+  e.target.reset();
+
+  showNoticeMessage(`Ticket ${ticketId} Logged Successfully!`);
+  openGrievanceModal(ticketId);
+}
+
+function openGrievanceModal(ticketId) {
+  const ticket = citizenTickets.find(t => t.id === ticketId);
+  if (!ticket) return;
+
+  document.getElementById('modalGrievId').textContent = ticket.id;
+  document.getElementById('modalGrievCitizen').textContent = ticket.name;
+  document.getElementById('modalGrievLoc').textContent = ticket.location;
+  document.getElementById('modalGrievCat').textContent = ticket.category;
+  document.getElementById('modalGrievDate').textContent = ticket.date || "Today";
+  document.getElementById('modalGrievDesc').textContent = ticket.desc;
+
+  document.getElementById('grievanceModal').classList.remove('hidden');
+}
+
+function closeGrievanceModal() {
+  document.getElementById('grievanceModal').classList.add('hidden');
+}
+
+function toggleNoticeModal() {
+  document.getElementById('noticeModal').classList.toggle('hidden');
+}
+
+function renderTimelineComponent(stageLevel) {
+  const stages = [
+    { num: 1, title: "Tender" },
+    { num: 2, title: "Order" },
+    { num: 3, title: "Started" },
+    { num: 4, title: "Audit" },
+    { num: 5, title: "Verified" }
+  ];
+
+  return `
+    <div class="my-3 p-3 bg-slate-100 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700">
+      <div class="text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center justify-between">
+        <span>Lifecycle Progress</span>
+        <span class="text-blue-600 dark:text-blue-400 font-mono">Stage ${stageLevel}/5</span>
+      </div>
+      <div class="flex items-center justify-between relative">
+        <div class="absolute top-1/2 left-0 right-0 h-1 bg-slate-300 dark:bg-slate-700 -translate-y-1/2 z-0"></div>
+        ${stages.map((st) => {
+          const isDone = st.num <= stageLevel;
+          const bgClass = isDone ? 'bg-emerald-500 text-white' : 'bg-slate-300 dark:bg-slate-700 text-slate-600 dark:text-slate-400';
+          return `
+            <div class="relative z-10 flex flex-col items-center">
+              <div class="w-5 h-5 rounded-full ${bgClass} font-bold text-[9px] flex items-center justify-center shadow">
+                ${isDone ? '<i class="fa-solid fa-check text-[8px]"></i>' : st.num}
+              </div>
+              <span class="text-[8px] sm:text-[9px] font-semibold mt-1 text-center leading-tight ${isDone ? 'text-slate-800 dark:text-slate-200 font-bold' : 'text-slate-400'}">${st.title}</span>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function openVillageModal(villageName) {
+  const item = villageList.find(v => v.name === villageName);
+  if (!item) return;
+
+  document.getElementById('modalSubTitle').textContent = `Village Entry Registry • ${item.block} Block`;
+  document.getElementById('modalTitle').textContent = item.name;
+
+  const timelineHTML = renderTimelineComponent(item.stage || 3);
+
+  document.getElementById('modalBody').innerHTML = `
+    <div class="bg-slate-50 dark:bg-slate-800 p-3.5 rounded-xl space-y-1.5 border border-slate-200 dark:border-slate-700 text-[11px]">
+      <div class="flex justify-between border-b border-slate-200 dark:border-slate-700 pb-1.5">
+        <span class="text-slate-500">Status:</span>
+        <strong class="text-slate-800 dark:text-slate-200">${item.status}</strong>
+      </div>
+      <div class="flex justify-between border-b border-slate-200 dark:border-slate-700 pb-1.5">
+        <span class="text-slate-500">Sanctioned Funding:</span>
+        <strong class="font-mono text-slate-800 dark:text-slate-200">${item.fund ? formatINR(item.fund) : 'N/A'}</strong>
+      </div>
+      <div class="flex justify-between border-b border-slate-200 dark:border-slate-700 pb-1.5">
+        <span class="text-slate-500">Expenditure:</span>
+        <strong class="font-mono text-slate-800 dark:text-slate-200">${item.spent ? formatINR(item.spent) : 'N/A'}</strong>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-slate-500">Verification Source:</span>
+        <span class="font-semibold text-blue-600 dark:text-blue-400">${item.verification}</span>
+      </div>
+    </div>
+
+    ${timelineHTML}
+  `;
+
+  document.getElementById('detailsModal').classList.remove('hidden');
+}
+
+function closeDetailsModal() {
+  document.getElementById('detailsModal').classList.add('hidden');
+}
+
+function openExportModal() {
+  document.getElementById('exportModal').classList.remove('hidden');
+}
+
+function closeExportModal() {
+  document.getElementById('exportModal').classList.add('hidden');
+}
+
+function openReportModal() {
+  document.getElementById('reportModal').classList.remove('hidden');
+}
+
+function closeReportModal() {
+  document.getElementById('reportModal').classList.add('hidden');
+}
+
+function downloadPDFReport() {
+  const element = document.createElement('div');
+  element.className = 'p-6 bg-white text-slate-900 font-sans space-y-4';
+  element.innerHTML = `
+    <div style="border-bottom: 2px solid #2563eb; padding-bottom: 12px; margin-bottom: 16px;">
+      <div style="font-size: 20px; font-weight: 800; color: #1e3a8a;">जनडाटा | JanData Public Infrastructure Audit Brief</div>
+      <div style="font-size: 11px; color: #64748b;">District: Madhya Pradesh / Bhopal • Generated Date: ${new Date().toLocaleDateString()}</div>
+    </div>
+
+    <div style="margin-bottom: 16px;">
+      <h3 style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 6px;">1. Regional Executive Summary</h3>
+      <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+        <tr style="background: #f1f5f9;">
+          <td style="padding: 6px; border: 1px solid #cbd5e1;">Active Filter Block: <strong>${currentSelectedBlock}</strong></td>
+          <td style="padding: 6px; border: 1px solid #cbd5e1;">Financial Year: <strong>${currentFY}</strong></td>
+        </tr>
+        <tr>
+          <td style="padding: 6px; border: 1px solid #cbd5e1;">Tracked Projects: <strong>12 PMGSY / PWD Stretches</strong></td>
+          <td style="padding: 6px; border: 1px solid #cbd5e1;">Total Road Length: <strong>38.45 KM</strong></td>
+        </tr>
+      </table>
+    </div>
+
+    <div>
+      <h3 style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 6px;">2. Audit Registry Table Sample</h3>
+      <table style="width: 100%; border-collapse: collapse; font-size: 10px; text-align: left;">
+        <thead>
+          <tr style="background: #2563eb; color: white;">
+            <th style="padding: 6px; border: 1px solid #1d4ed8;">Village</th>
+            <th style="padding: 6px; border: 1px solid #1d4ed8;">Block</th>
+            <th style="padding: 6px; border: 1px solid #1d4ed8;">Status</th>
+            <th style="padding: 6px; border: 1px solid #1d4ed8;">Sanctioned Fund</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${villageList.slice(0, 10).map(v => `
+            <tr>
+              <td style="padding: 5px; border: 1px solid #cbd5e1;">${v.name}</td>
+              <td style="padding: 5px; border: 1px solid #cbd5e1;">${v.block}</td>
+              <td style="padding: 5px; border: 1px solid #cbd5e1;">${v.status}</td>
+              <td style="padding: 5px; border: 1px solid #cbd5e1;">${v.fund ? '₹' + (v.fund/100000).toFixed(2) + ' Lakh' : 'Pending'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <div style="margin-top: 24px; font-size: 9px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 8px;">
+      जनडाटा Transparency Desk • Official Open Dataset Mirror.
+    </div>
+  `;
+
+  const opt = {
+    margin:       0.5,
+    filename:     `JanData_Audit_Report_Bhopal_${Date.now()}.pdf`,
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2 },
+    jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+  };
+
+  html2pdf().set(opt).from(element).save();
+}
+
+function exportToCSV() {
+  const headers = ["Village Name", "Block", "Status", "Sanctioned Fund (INR)", "Spent Fund (INR)", "Verification"];
+  const rows = villageList.map(v => [
+    `"${v.name}"`,
+    `"${v.block}"`,
+    `"${v.status}"`,
+    v.fund || "",
+    v.spent || "",
+    `"${v.verification}"`
+  ]);
+
+  const csvContent = [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", `JanData_Bhopal_Infrastructure_${Date.now()}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  closeExportModal();
+}
+
+function exportToJSON() {
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(villageList, null, 2));
+  const link = document.createElement("a");
+  link.setAttribute("href", dataStr);
+  link.setAttribute("download", `JanData_Bhopal_Dataset_${Date.now()}.json`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  closeExportModal();
+}
+</script>
+</body>
+</html>
